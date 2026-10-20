@@ -115,6 +115,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 - Ports起動用エントリの配置と、表示所有権を切り替えた実機起動・終了
 - A/B/X入力と、本体への状態保存
 - 1024×768で18秒・331フレーム（約18fps）の描画
+- 再起動時にEmulationStationより先へmukuを自動表示
 - Webhookの`202 Accepted`受信
 - 独立したDropbear SSHサービスの公開鍵認証
 

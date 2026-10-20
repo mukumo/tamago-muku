@@ -24,13 +24,12 @@ remote "
 set -eu
 config=/storage/.config/emuelec/configs/emuelec.conf
 port=/storage/roms/ports_scripts/Muku.sh
+helper=/storage/muku/muku-autostart.sh
+dropin_dir=/storage/.config/system.d/emustation.service.d
+dropin=\"\$dropin_dir/muku-autostart.conf\"
 [ -f \"\$config\" ] || { echo 'EmuELEC config not found' >&2; exit 1; }
 [ -x \"\$port\" ] || { echo 'Muku Port launcher not found' >&2; exit 1; }
-service_stopped=0
-restore_service() {
-  [ \"\$service_stopped\" -eq 0 ] || systemctl start emustation >/dev/null 2>&1 || true
-}
-trap restore_service EXIT INT TERM
+[ -x \"\$helper\" ] || { echo 'Muku autostart helper not found; run install-r36max2-ssh.sh first' >&2; exit 1; }
 stamp=\$(date +%Y%m%d-%H%M%S)
 backup=\"\$config.before-muku-autostart-\$stamp\"
 cp -p \"\$config\" \"\$backup\"
@@ -39,21 +38,36 @@ awk '
   !/^global\.bootgame\.path=/ &&
   !/^global\.bootgame\.cmd=/
 ' \"\$config\" >\"\$temporary\"
-if [ '$mode' = 'enable' ]; then
-  printf '%s\n' 'global.bootgame.path=/storage/roms/ports_scripts/Muku.sh' >>\"\$temporary\"
-  printf '%s\n' 'global.bootgame.cmd=/usr/bin/bash %ROM% -Pports --core=ports --emulator=ports --controllers=\"%CONTROLLERSCONFIG%\"' >>\"\$temporary\"
-fi
 chmod 644 \"\$temporary\"
-sync
 systemctl stop emustation
-service_stopped=1
 mv \"\$temporary\" \"\$config\"
+mkdir -p \"\$dropin_dir\"
+if [ -f \"\$dropin\" ]; then
+  cp -p \"\$dropin\" \"\$dropin.before-muku-autostart-\$stamp\"
+fi
+if [ '$mode' = 'enable' ]; then
+  printf '%s\n' \
+    '[Service]' \
+    'ExecStartPre=-/storage/muku/muku-autostart.sh' \
+    'TimeoutStartSec=infinity' >\"\$dropin.tmp\"
+  chmod 644 \"\$dropin.tmp\"
+  mv \"\$dropin.tmp\" \"\$dropin\"
+  rm -f /run/tamago-muku-autostart-done
+else
+  rm -f \"\$dropin\"
+  rm -f /run/tamago-muku-autostart-done
+fi
 sync
+systemctl daemon-reload
 printf 'backup=%s\n' \"\$backup\"
-grep '^global\\.bootgame\\.' \"\$config\" || true
-systemctl start emustation
-service_stopped=0
-trap - EXIT INT TERM
+if [ '$mode' = 'enable' ]; then
+  printf 'dropin=%s\n' \"\$dropin\"
+  cat \"\$dropin\"
+  systemctl start --no-block emustation
+else
+  printf 'dropin=disabled\n'
+  systemctl start emustation
+fi
 "
 
 echo "muku autostart mode: $mode"

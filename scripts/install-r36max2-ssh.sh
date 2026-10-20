@@ -4,7 +4,7 @@ set -eu
 target=${1:?Usage: install-r36max2-ssh.sh root@HOST}
 key=${R36_SSH_KEY:-$HOME/.ssh/id_ed25519}
 known_hosts=${R36_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}
-repo=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+repo=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
 binary="$repo/target/aarch64-unknown-linux-musl/release/muku-pet"
 
 remote() {
@@ -31,6 +31,9 @@ fi
 
 tar -C "$repo/packaging/r36max2" -cf - Muku.sh gamelist.xml |
     remote 'tar -xf - -C /storage/roms/ports_scripts && chmod 755 /storage/roms/ports_scripts/Muku.sh'
+
+tar -C "$repo/packaging/r36max2" -cf - muku-autostart.sh |
+    remote 'tar -xf - -C /storage/muku && chmod 755 /storage/muku/muku-autostart.sh'
 
 remote "
 mv '$stage' /storage/muku/muku-pet

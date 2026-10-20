@@ -73,15 +73,19 @@ SSH設定済みの端末へアプリだけを更新する場合:
 ./scripts/set-r36max2-autostart.sh root@R36_IP
 ```
 
-EmuELECの標準`global.bootgame.path`を使います。
-mukuのSTARTで終了すると通常のEmulationStationメニューが開きます。
+EmulationStationの起動直前に、1回だけmukuを実行するsystemd設定を追加します。
+mukuのSTARTで終了すると、そのまま通常のEmulationStationメニューが開きます。
+mukuが起動できなかった場合もEmulationStationへ進み、再起動中の自動再試行では
+mukuを繰り返さないため、通常メニューから操作を続けられます。
 元に戻す場合:
 
 ```sh
 ./scripts/set-r36max2-autostart.sh root@R36_IP --disable
 ```
 
-どちらも変更前の`emuelec.conf`を日時付きでバックアップします。
+どちらも変更前の`emuelec.conf`と既存のsystemd設定を日時付きでバックアップします。
+実装は`packaging/r36max2/muku-autostart.sh`と
+`/storage/.config/system.d/emustation.service.d/muku-autostart.conf`です。
 
 ## Webhook
 
@@ -130,6 +134,7 @@ Grokとのテキスト会話、Web検索、xAI TTS、MUKU転送をまとめた�
 
 - 自動起動後のWi-Fi: `TSUQREA-WiFi`、2437MHz、channel 6
 - DHCP: LANアドレスを取得し、同一サブネットのMacから到達可能
+- 再起動後、EmulationStationを起動せずmukuが前面プロセスとして開始
 - muku: 1024×768、18秒で331フレーム
 - 入力: A=304、B=305、X=308を実入力で確認
 - Webhook: `{"ok":true,"message":"accepted"}`
