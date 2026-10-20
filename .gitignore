@@ -8,3 +8,4 @@ __pycache__/
 /install-manifest.json
 webhook.json
 *webhook*.local.json
+/.local/

@@ -56,7 +56,18 @@ Portsの`MUKU`起動スクリプトは、このファイルがあれば自動で
 
 ## 送信テスト
 
-### macOSのTTS音声付き
+### xAIのTTS音声付き
+
+Grokの返答とxAI TTSをまとめてMUKUへ送るローカル画面があります。
+
+```text
+http://127.0.0.1:8790
+```
+
+APIキーはKeychain、MUKUトークンはGit管理外の`.local/webhook.json`に保持します。
+設定と制約は[xAI会話ブリッジ](XAI.md)を参照してください。
+
+### macOS標準音声付き
 
 `say`で日本語WAVを作り、本文と一緒にWebhookへ送るスクリプトがあります。
 

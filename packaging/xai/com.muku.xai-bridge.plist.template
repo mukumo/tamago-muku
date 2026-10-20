@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.muku.xai-bridge</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>-i</string>
+        <string>HOME=__HOME__</string>
+        <string>PATH=/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>LANG=ja_JP.UTF-8</string>
+        <string>/usr/bin/python3</string>
+        <string>__REPO__/scripts/xai_muku_bridge.py</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>8790</string>
+        <string>--device-url</string>
+        <string>__DEVICE_URL__</string>
+        <string>--muku-config</string>
+        <string>__CONFIG__</string>
+        <string>--model</string>
+        <string>grok-4.20-0309-non-reasoning</string>
+        <string>--voice</string>
+        <string>eve</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+    <key>StandardOutPath</key>
+    <string>__REPO__/.local/xai-bridge.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO__/.local/xai-bridge.err.log</string>
+</dict>
+</plist>

@@ -107,6 +107,9 @@ Macの`Kyoko`音声からTTS WAVを作って送る場合:
 TTSは端末内ではなく、Mac側でWAVを生成します。
 端末は受け取ったWAVを`aplay`で再生します。
 
+Grokとのテキスト会話、Web検索、xAI TTS、MUKU転送をまとめたローカル画面は
+[xAI会話ブリッジ](XAI.md)にあります。
+
 ## 検証結果
 
 - 自動起動後のWi-Fi: `TSUQREA-WiFi`、2437MHz、channel 6

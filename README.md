@@ -79,6 +79,26 @@ R36MAX 2の`/storage/muku/webhook.json`が見つかった場合だけ受信サ�
 [Webhook通知の設定](docs/NOTIFICATIONS.md)を参照してください。
 R36MAX 2のSSHと配備は[R36MAX 2実機メモ](docs/R36MAX2.md)にまとめています。
 
+## Grokとの会話
+
+Mac上でローカル会話画面を動かし、Grokの返答をmukuへ表示・読み上げられます。
+
+```sh
+# 初回だけ
+security add-generic-password -U -a kan -s tamago-muku-xai -w
+./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
+```
+
+その後、Macで<http://127.0.0.1:8790>を開きます。
+
+- APIキーはmacOS Keychainから読み、ブラウザやR36へ渡しません
+- Web検索の有無を会話ごとに選べます
+- Grokの返答をxAI TTSで日本語WAVへ変換します
+- MUKUの既存WebhookトークンでR36へ表示・音声を送ります
+- LaunchAgentは最小環境で起動し、不要なセッション秘密情報を継承しません
+
+詳細は[xAI会話ブリッジ](docs/XAI.md)にあります。
+
 ## 実機で確認済みの範囲
 
 2026-10-20に、USB接続したRK3562の4.3インチ機で次を確認しました。
@@ -185,6 +205,7 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 - `src/drm_display.rs`: DRM/KMS描画と後片付け
 - `src/notifications.rs`: トークン認証付きWebhook受信
 - `src/audio.rs`: Webhook添付WAVの非同期再生
+- `scripts/xai_muku_bridge.py`: Grok会話、Web検索、xAI TTS、MUKU転送
 
 機器の確認結果は[ハードウェアメモ](docs/HARDWARE.md)にあります。
 
