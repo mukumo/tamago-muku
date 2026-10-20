@@ -1,6 +1,7 @@
 use crate::{
+    app::{App, AppEvent, Button},
+    notifications::WebhookServer,
     render,
-    state::{Action, PetState},
 };
 use std::{
     error::Error,
@@ -123,21 +124,27 @@ fn inputs() -> io::Result<Vec<(String, File)>> {
 }
 
 // Defaults cover this handheld's keyboard-style controls plus standard gamepads.
-fn key_action(code: u16) -> Option<Action> {
+fn key_button(code: u16) -> Option<Button> {
     match code {
-        57 | 30 | 304 | 103 => Some(Action::Pet), // space/A/gamepad south/up
-        48 | 305 | 106 => Some(Action::Feed),     // B/gamepad east/right
-        45 | 31 | 44 | 308 | 108 => Some(Action::Play), // X/S/Z/gamepad west/down
-        21 | 32 | 307 | 309 | 105 => Some(Action::Sleep), // Y/D/gamepad north/left
+        103 => Some(Button::Up),
+        108 => Some(Button::Down),
+        105 => Some(Button::Left),
+        106 => Some(Button::Right),
+        30 | 304 => Some(Button::A),
+        48 | 305 => Some(Button::B),
+        45 | 308 => Some(Button::X),
+        21 | 307 => Some(Button::Y),
+        28 | 315 => Some(Button::Start),
         _ => None,
     }
 }
 
 pub fn run(
-    state: &mut PetState,
+    app: &mut App,
     path: &Path,
     seconds: Option<f64>,
     snapshot: Option<&Path>,
+    webhook: Option<&WebhookServer>,
 ) -> Result<(), Box<dyn Error>> {
     let mut fb = crate::drm_display::DrmDisplay::open()?;
     let mut inputs = inputs()?;
@@ -153,7 +160,7 @@ pub fn run(
     let start = Instant::now();
     let mut previous = start;
     let mut last_save = start;
-    let mut last_input: Option<(Action, Instant)> = None;
+    let mut last_input: Option<(Button, Instant)> = None;
     let mut frames = 0u64;
     let mut snapshot_saved = false;
     while RUNNING.load(Ordering::Relaxed) {
@@ -161,8 +168,14 @@ pub fn run(
         if seconds.is_some_and(|limit| now.duration_since(start).as_secs_f64() >= limit) {
             break;
         }
-        state.tick(now.duration_since(previous).as_secs_f32());
+        app.tick(now.duration_since(previous).as_secs_f32());
         previous = now;
+        if let Some(server) = webhook {
+            while let Ok(notice) = server.try_recv() {
+                eprintln!("notice from {}: {}", notice.source, notice.title);
+                app.push_notice(notice);
+            }
+        }
         for (name, file) in &mut inputs {
             loop {
                 let mut buf = [0u8; std::mem::size_of::<libc::input_event>()];
@@ -177,20 +190,23 @@ pub fn run(
                             continue;
                         }
                         eprintln!("key {name}: {} pressed", event.code);
-                        if [28, 315].contains(&event.code) {
-                            RUNNING.store(false, Ordering::Relaxed);
-                        } else if let Some(action) = key_action(event.code) {
+                        if let Some(button) = key_button(event.code) {
                             // Duplicate GPIO/i2c events are common on this handheld.
-                            if last_input.is_some_and(|(a, t)| {
-                                a == action && now.duration_since(t) < Duration::from_millis(160)
+                            if last_input.is_some_and(|(b, t)| {
+                                b == button && now.duration_since(t) < Duration::from_millis(160)
                             }) {
                                 continue;
                             }
-                            state.act(action);
-                            state.save(path)?;
-                            last_save = now;
-                            last_input = Some((action, now));
-                            eprintln!("action {action:?}, interactions={}", state.interactions);
+                            match app.handle(button) {
+                                AppEvent::Exit => RUNNING.store(false, Ordering::Relaxed),
+                                AppEvent::Save => {
+                                    app.pet.save(path)?;
+                                    last_save = now;
+                                }
+                                AppEvent::None => {}
+                            }
+                            last_input = Some((button, now));
+                            eprintln!("button {button:?}, interactions={}", app.pet.interactions);
                         }
                     }
                     Ok(_) => return Err("partial evdev input packet".into()),
@@ -200,7 +216,7 @@ pub fn run(
                 }
             }
         }
-        let frame = render::render(state, now.duration_since(start).as_secs_f32());
+        let frame = render::render_app(app, now.duration_since(start).as_secs_f32());
         fb.present(&frame)?;
         frames += 1;
         if !snapshot_saved && now.duration_since(start) > Duration::from_secs(2) {
@@ -210,12 +226,12 @@ pub fn run(
             snapshot_saved = true;
         }
         if now.duration_since(last_save) > Duration::from_secs(30) {
-            state.save(path)?;
+            app.pet.save(path)?;
             last_save = now;
         }
         std::thread::sleep(Duration::from_millis(50).saturating_sub(now.elapsed()));
     }
-    state.save(path)?;
+    app.pet.save(path)?;
     eprintln!(
         "muku saved; {frames} frames in {:.2}s",
         start.elapsed().as_secs_f64()
@@ -233,10 +249,13 @@ mod tests {
         assert_eq!(std::mem::size_of::<FixInfo>(), 80);
     }
     #[test]
-    fn dpad_covers_care() {
-        assert_eq!(key_action(103), Some(Action::Pet));
-        assert_eq!(key_action(106), Some(Action::Feed));
-        assert_eq!(key_action(108), Some(Action::Play));
-        assert_eq!(key_action(105), Some(Action::Sleep));
+    fn controls_are_mapped() {
+        assert_eq!(key_button(103), Some(Button::Up));
+        assert_eq!(key_button(105), Some(Button::Left));
+        assert_eq!(key_button(30), Some(Button::A));
+        assert_eq!(key_button(48), Some(Button::B));
+        assert_eq!(key_button(45), Some(Button::X));
+        assert_eq!(key_button(21), Some(Button::Y));
+        assert_eq!(key_button(28), Some(Button::Start));
     }
 }

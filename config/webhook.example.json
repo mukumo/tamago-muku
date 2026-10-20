@@ -1,0 +1,4 @@
+{
+  "bind": "0.0.0.0:8787",
+  "token": "REPLACE_WITH_AT_LEAST_16_RANDOM_CHARACTERS"
+}

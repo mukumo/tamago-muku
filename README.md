@@ -20,7 +20,31 @@ Rustの静的バイナリが480×272の画面を直接描き、インターネ�
 おなか・気分・元気は起動中の時間でゆっくり変わります。
 電源を切っていた時間を計算しないので、不在によるペナルティや死はありません。
 画面のdayは、起きて一緒に過ごした時間を24時間ずつ数えたものです。
-会話AI、成長段階、音、ネット同期はまだありません。
+会話AIの生成、成長段階、音、Webhook以外の同期はまだありません。
+
+## ミニゲーム
+
+ホームでXを押すとゲームを選べます。左右で選び、Aで開始します。
+
+![ゲーム選択](docs/images/games-select.png)
+
+- STAR CATCH: 25秒間、左右にmukuを動かして落ちてくる星を拾います。
+- BEAT GARDEN: 画面の4レーンへ落ちてくる音符に合わせ、A/B/X/Yを押します。
+
+結果は0〜5個の星で表示され、遊んだ分はmukuの気分と元気へ反映されます。
+ゲーム中にSTARTを押すと、その時点で結果画面へ移ります。
+
+## Wi-FiモデルのWebhook通知
+
+Wi-Fi内蔵モデルでは、トークン認証付きのLAN Webhookを受信できます。
+AIなどからJSONを送ると、mukuの部屋へ通知を表示します。
+設定、送信例、外部Webhookを公開する場合の注意は
+[docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md)にあります。
+
+![日本語のWebhook通知](docs/images/japanese-notification.png)
+
+SDの`/muku/webhook.json`が見つかった場合だけ受信サーバーを起動します。
+このファイルがなければ、現在のオフライン動作は変わりません。
 
 ## 実機で確認した範囲（2026-10-20）
 
@@ -101,6 +125,10 @@ mukuの形・色・目・呼吸と瞬きは、
 と[ブランド仕様](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md)
 を確認して移植しました。標準のmukuに口・ほっぺ・手足・衣装は追加していません。
 キャラクター素材に公開ライセンスが確認できたという意味ではありません。
+
+通知の日本語表示には
+[M PLUS Rounded 1c Regular](assets/fonts/MPLUSRounded1c-Regular.ttf)を使っています。
+同梱の[SIL Open Font License](assets/fonts/OFL.txt)に従います。
 
 - `src/state.rs`: ローカル状態、時間の経過、検証と原子的な保存。
 - `src/render.rs`: tiny-skiaによる部屋とキャラクターの描画。

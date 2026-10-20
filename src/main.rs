@@ -1,10 +1,20 @@
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+mod app;
 #[cfg(target_os = "linux")]
 mod device;
 #[cfg(target_os = "linux")]
 mod drm_display;
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+mod minigame;
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+mod notifications;
 mod render;
 mod state;
 
+use app::App;
+use minigame::{GameInput, GameKind, MiniGame};
+#[cfg(target_os = "linux")]
+use notifications::{WebhookConfig, WebhookServer};
 use state::{Action, PetState};
 use std::{
     error::Error,
@@ -46,11 +56,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.is_empty() || args.iter().any(|v| v == "--help") {
         println!("muku-pet --device [--state FILE] [--seconds N] [--snapshot FILE]\n\
+                         [--webhook-config FILE]\n\
                   muku-pet --preview FILE.png [--action idle|pet|feed|play|sleep] [--time SECONDS]\n\
+                         [--notice-title TEXT --notice-body TEXT --notice-source SOURCE]\n\
+                  muku-pet --preview-game star|beat|select|result FILE.png [--game-time SECONDS]\n\
                   muku-pet --simulate pet,feed,play,sleep --state FILE\n\
                   muku-pet --inspect\n\
-                  Device: buttons/d-pad care for muku; START saves and exits.\n\
-                  No wall clock, network, firmware changes, or power-off penalties.");
+                  Device: A/B/Y give care, X opens two mini-games; START exits from home.\n\
+                  No wall clock or power-off penalties. Network is opt-in; firmware is untouched.");
         return Ok(());
     }
     let state_path =
@@ -76,7 +89,68 @@ fn main() -> Result<(), Box<dyn Error>> {
         if !t.is_finite() || t < 0.0 {
             return Err("time must be finite and nonnegative".into());
         }
-        render::render(&state, t).save_png(&path)?;
+        let mut app = App::new(state);
+        if let Some(title) = argument(&args, "--notice-title")? {
+            app.push_notice(notifications::Notice {
+                id: "preview".into(),
+                title,
+                body: argument(&args, "--notice-body")?.unwrap_or_default(),
+                source: argument(&args, "--notice-source")?.unwrap_or_else(|| "ai".into()),
+                kind: "notice".into(),
+            });
+        }
+        render::render_app(&app, t).save_png(&path)?;
+        println!("preview: {path}");
+        return Ok(());
+    }
+    if let Some(view) = argument(&args, "--preview-game")? {
+        let path = args
+            .get(
+                args.iter()
+                    .position(|arg| arg == "--preview-game")
+                    .expect("preview-game exists")
+                    + 2,
+            )
+            .ok_or("--preview-game needs an output path")?;
+        let mut app = App::new(state.clone());
+        app.screen = app::Screen::GameSelect;
+        let game_time: f32 = argument(&args, "--game-time")?
+            .unwrap_or_else(|| "4.0".into())
+            .parse()?;
+        if !game_time.is_finite() || game_time < 0.0 {
+            return Err("game time must be finite and nonnegative".into());
+        }
+        match view.as_str() {
+            "select" => {}
+            "star" | "beat" => {
+                let kind = if view == "star" {
+                    GameKind::StarCatch
+                } else {
+                    GameKind::BeatGarden
+                };
+                app.screen = app::Screen::Playing;
+                let mut game = MiniGame::new(kind, 7);
+                for _ in 0..(game_time / 0.1).round() as usize {
+                    game.tick(0.1);
+                    if kind == GameKind::StarCatch && game_time > 2.0 {
+                        game.input(GameInput::Right);
+                    }
+                }
+                app.game = Some(game);
+            }
+            "result" => {
+                app.screen = app::Screen::Result;
+                app.result = Some(minigame::GameResult {
+                    kind: GameKind::StarCatch,
+                    score: 18,
+                    best_combo: 7,
+                    hits: 18,
+                    misses: 2,
+                });
+            }
+            _ => return Err(format!("unknown game preview: {view}").into()),
+        }
+        render::render_app(&app, game_time).save_png(path)?;
         println!("preview: {path}");
         return Ok(());
     }
@@ -93,7 +167,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                 return Err("seconds must be finite and positive".into());
             }
             let snapshot = argument(&args, "--snapshot")?.map(PathBuf::from);
-            return device::run(&mut state, &state_path, seconds, snapshot.as_deref());
+            let webhook = if let Some(path) = argument(&args, "--webhook-config")? {
+                let config = WebhookConfig::load(Path::new(&path))?;
+                let server = WebhookServer::start(&config.bind, &config.token)?;
+                eprintln!("webhook listening on http://{}", server.address());
+                Some(server)
+            } else {
+                None
+            };
+            let mut app = App::new(state);
+            return device::run(
+                &mut app,
+                &state_path,
+                seconds,
+                snapshot.as_deref(),
+                webhook.as_ref(),
+            );
         }
     }
     Err("use --preview on macOS, or --device / --inspect on the Linux handheld".into())

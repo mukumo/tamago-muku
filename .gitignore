@@ -6,3 +6,5 @@ __pycache__/
 *.img
 /state.json
 /install-manifest.json
+webhook.json
+*webhook*.local.json
