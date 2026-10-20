@@ -1,5 +1,6 @@
 use crate::{
     app::{App, AppEvent, Button},
+    audio::AudioPlayer,
     notifications::WebhookServer,
     render,
 };
@@ -149,6 +150,7 @@ pub fn run(
     let mut fb = crate::drm_display::DrmDisplay::open()?;
     let mut inputs = inputs()?;
     let (display_width, display_height) = fb.dimensions();
+    let audio = AudioPlayer::new();
     unsafe {
         libc::signal(libc::SIGINT, stop as *const () as libc::sighandler_t);
         libc::signal(libc::SIGTERM, stop as *const () as libc::sighandler_t);
@@ -174,6 +176,11 @@ pub fn run(
         if let Some(server) = webhook {
             while let Ok(notice) = server.try_recv() {
                 eprintln!("notice from {}: {}", notice.source, notice.title);
+                match notice.decoded_audio() {
+                    Ok(Some(wav)) => audio.play(wav),
+                    Ok(None) => {}
+                    Err(error) => eprintln!("invalid notice audio: {error}"),
+                }
                 app.push_notice(notice);
             }
         }

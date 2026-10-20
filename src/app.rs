@@ -259,6 +259,7 @@ mod tests {
             body: "from ai".into(),
             source: "ai".into(),
             kind: "notice".into(),
+            audio_wav_base64: None,
         });
         app.tick(20.0);
         assert!(app.notice.is_some());

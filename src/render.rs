@@ -299,6 +299,9 @@ fn notice_banner(p: &mut Pixmap, notice: &crate::notifications::Notice, age: f32
         color(111, 128, 105, alpha),
         252.0,
     );
+    if notice.audio_wav_base64.is_some() {
+        speaker(p, 429.0, 79.0, color(83, 119, 89, alpha));
+    }
 }
 
 fn game_header(p: &mut Pixmap, title: &str, right: &str) {
@@ -1035,6 +1038,22 @@ fn bell(p: &mut Pixmap, x: f32, y: f32, c: Color) {
     b.close();
     fill(p, &b.finish().unwrap(), c);
     oval(p, x, y + 8.0, 2.0, 2.0, c);
+}
+
+fn speaker(p: &mut Pixmap, x: f32, y: f32, c: Color) {
+    let mut b = PathBuilder::new();
+    b.move_to(x - 8.0, y - 3.0);
+    b.line_to(x - 4.0, y - 3.0);
+    b.line_to(x + 1.0, y - 8.0);
+    b.line_to(x + 1.0, y + 8.0);
+    b.line_to(x - 4.0, y + 3.0);
+    b.line_to(x - 8.0, y + 3.0);
+    b.close();
+    fill(p, &b.finish().unwrap(), c);
+    let mut waves = PathBuilder::new();
+    waves.move_to(x + 4.0, y - 5.0);
+    waves.quad_to(x + 9.0, y, x + 4.0, y + 5.0);
+    stroke(p, &waves.finish().unwrap(), 1.5, c);
 }
 
 fn color(r: u8, g: u8, b: u8, a: u8) -> Color {

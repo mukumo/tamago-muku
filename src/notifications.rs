@@ -4,6 +4,7 @@
 //! services, expose it through an authenticated tunnel or a relay that validates
 //! the original sender before forwarding here.
 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -20,7 +21,8 @@ use std::{
 };
 
 const MAX_HEADER_BYTES: usize = 8 * 1024;
-const MAX_BODY_BYTES: usize = 8 * 1024;
+const MAX_BODY_BYTES: usize = 4 * 1024 * 1024;
+const MAX_AUDIO_BYTES: usize = 2 * 1024 * 1024;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Notice {
@@ -32,6 +34,8 @@ pub struct Notice {
     pub source: String,
     #[serde(default = "default_kind")]
     pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audio_wav_base64: Option<String>,
 }
 
 fn default_source() -> String {
@@ -62,7 +66,29 @@ impl Notice {
         {
             return Err("notification fields cannot contain control characters");
         }
+        if self.audio_wav_base64.is_some() {
+            self.decoded_audio()?;
+        }
         Ok(())
+    }
+
+    pub fn decoded_audio(&self) -> Result<Option<Vec<u8>>, &'static str> {
+        let Some(encoded) = &self.audio_wav_base64 else {
+            return Ok(None);
+        };
+        if encoded.len() > MAX_AUDIO_BYTES * 4 / 3 + 8 {
+            return Err("audio payload is too large");
+        }
+        let bytes = BASE64
+            .decode(encoded)
+            .map_err(|_| "audio must be valid base64")?;
+        if bytes.len() > MAX_AUDIO_BYTES {
+            return Err("decoded audio is too large");
+        }
+        if bytes.len() < 12 || &bytes[..4] != b"RIFF" || &bytes[8..12] != b"WAVE" {
+            return Err("audio must be a WAV file");
+        }
+        Ok(Some(bytes))
     }
 }
 
@@ -209,7 +235,7 @@ fn serve(stream: &mut TcpStream, token: &[u8]) -> io::Result<Notice> {
         return respond(stream, 401, "unauthorized");
     }
     if content_length == 0 || content_length > MAX_BODY_BYTES {
-        return respond(stream, 413, "body must be 1 to 8192 bytes");
+        return respond(stream, 413, "body must be 1 byte to 4 MiB");
     }
     while request.len() < header_end + content_length {
         let count = stream.read(&mut chunk)?;
@@ -283,12 +309,18 @@ mod tests {
             body: "from ai".into(),
             source: "ai".into(),
             kind: "notice".into(),
+            audio_wav_base64: None,
         };
         assert!(notice.validate().is_ok());
         notice.body = "line\nbreak".into();
         assert!(notice.validate().is_err());
         notice.body = "a".repeat(181);
         assert!(notice.validate().is_err());
+        notice.body = "from ai".into();
+        notice.audio_wav_base64 = Some(BASE64.encode(b"not a wav file"));
+        assert!(notice.validate().is_err());
+        notice.audio_wav_base64 = Some(BASE64.encode(b"RIFF\x24\x00\x00\x00WAVEfmt "));
+        assert!(notice.validate().is_ok());
     }
 
     #[test]
@@ -320,7 +352,14 @@ mod tests {
         let token = "0123456789abcdef";
         let server = WebhookServer::start("127.0.0.1:0", token).unwrap();
         let mut client = TcpStream::connect(server.address()).unwrap();
-        let body = r#"{"title":"AI says hello","body":"time for a break","source":"ai"}"#;
+        let wav = b"RIFF\x24\x00\x00\x00WAVEfmt ";
+        let body = serde_json::json!({
+            "title": "AI says hello",
+            "body": "time for a break",
+            "source": "ai",
+            "audio_wav_base64": BASE64.encode(wav),
+        })
+        .to_string();
         write!(
             client,
             "POST /webhook HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer {token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{body}",
@@ -340,6 +379,7 @@ mod tests {
             .unwrap();
         assert_eq!(notice.title, "AI says hello");
         assert_eq!(notice.source, "ai");
+        assert_eq!(notice.decoded_audio().unwrap().unwrap(), wav);
     }
 
     #[test]

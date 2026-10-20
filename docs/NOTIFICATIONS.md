@@ -15,7 +15,8 @@ Content-Type: application/json
   "title": "AIからのおしらせ",
   "body": "15時から予定があります",
   "source": "ai",
-  "kind": "notice"
+  "kind": "notice",
+  "audio_wav_base64": "UklGRi..."
 }
 ```
 
@@ -23,11 +24,13 @@ Content-Type: application/json
 - `body`: 0〜180文字。
 - `source`: 最大32文字。省略時は`webhook`。
 - `kind`: 最大24文字。省略時は`notice`。
-- 本文とヘッダーは各8KiBまで。制御文字は拒否します。
+- 本文は180文字、HTTP本文は4MiBまで。制御文字は拒否します。
+- `audio_wav_base64`は任意です。Base64で符号化したPCM WAVを最大2MiBまで受け付けます。
 - トークンが16文字未満ならサーバーを開始しません。
 - 成功時は`202 Accepted`。認証失敗は`401`、形式不正は`422`です。
 - 受信中のゲームを止めず、部屋に戻ったときに9秒間表示します。
 - 日本語、英数字、記号を同梱のOFLフォントで表示します。
+- 音声付きの場合、表示と同じタイミングで`aplay`へ非同期で渡します。
 
 ## SDへ設定
 
@@ -52,6 +55,27 @@ Portsの`MUKU`起動スクリプトは、このファイルがあれば自動で
 ファイルがなければ、これまで通り完全オフラインで動きます。
 
 ## 送信テスト
+
+### macOSのTTS音声付き
+
+`say`で日本語WAVを作り、本文と一緒にWebhookへ送るスクリプトがあります。
+
+```sh
+./scripts/send-notice-tts.sh \
+  --url http://R36_IP:8787/webhook \
+  --config /path/to/webhook.json \
+  --title "Codexからお知らせ" \
+  --body "少し休憩しませんか。温かいお茶をどうぞ。"
+```
+
+- 標準音声: `Kyoko`
+- 速度: 185語/分
+- 音声形式: PCM 16bit / mono / 22050Hz
+- `--voice`、`--rate`、`--source`で変更できます
+- `--dry-run`は送信せず、生成JSONの文字数と音声サイズだけを表示します
+- トークンは設定ファイルから読み、コマンドラインや標準出力へ表示しません
+
+### テキストのみ
 
 端末のLANアドレスを`192.0.2.10`、トークンを環境変数`MUKU_WEBHOOK_TOKEN`に入れた例です。
 

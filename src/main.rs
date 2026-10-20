@@ -1,6 +1,8 @@
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 mod app;
 #[cfg(target_os = "linux")]
+mod audio;
+#[cfg(target_os = "linux")]
 mod device;
 #[cfg(target_os = "linux")]
 mod drm_display;
@@ -97,6 +99,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 body: argument(&args, "--notice-body")?.unwrap_or_default(),
                 source: argument(&args, "--notice-source")?.unwrap_or_else(|| "ai".into()),
                 kind: "notice".into(),
+                audio_wav_base64: None,
             });
         }
         render::render_app(&app, t).save_png(&path)?;

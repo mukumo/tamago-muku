@@ -12,7 +12,7 @@ Wi-Fi内蔵のR36MAX 2では、任意でWebhook通知を受け取れます。
 - ごはん、睡眠、遊びによる状態変化
 - 状態の自動保存
 - 2種類のミニゲームと0〜5個のリザルト評価
-- Wi-Fiモデル向けのトークン認証付きWebhook通知
+- Wi-Fiモデル向けのトークン認証付きWebhook通知と任意のTTS音声
 
 おなか・気分・元気は起動中の時間でゆっくり変化します。
 電源を切っていた時間は計算しないため、不在によるペナルティや死はありません。
@@ -58,6 +58,19 @@ AIなどから次の形式で送ると、mukuの部屋へ日本語の通知を�
 
 受信先は`POST /webhook`で、Bearerトークンが必須です。
 ゲーム中は割り込まず、ホームへ戻ったときに9秒間表示します。
+WAVをBase64で添付すると、通知表示と同時に本体のスピーカーで再生します。
+
+macOSの日本語音声からWAVを作り、Webhookへ送る場合:
+
+```sh
+./scripts/send-notice-tts.sh \
+  --url http://R36_IP:8787/webhook \
+  --config /path/to/webhook.json \
+  --title "AIからのおしらせ" \
+  --body "少し休憩しませんか"
+```
+
+音声はMacの`say`と`afconvert`で生成します。標準では`Kyoko`を使います。
 
 R36MAX 2の`/storage/muku/webhook.json`が見つかった場合だけ受信サーバーを開始します。
 ファイルがなければ、これまで通り完全オフラインで動作します。
@@ -171,6 +184,7 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 - `src/device.rs`: evdev入力と約20fpsの実行ループ
 - `src/drm_display.rs`: DRM/KMS描画と後片付け
 - `src/notifications.rs`: トークン認証付きWebhook受信
+- `src/audio.rs`: Webhook添付WAVの非同期再生
 
 機器の確認結果は[ハードウェアメモ](docs/HARDWARE.md)にあります。
 
@@ -178,6 +192,7 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 
 - 会話AIの生成、成長段階、音、Webhook以外の同期はまだありません。
 - WebhookはLAN向けの平文HTTPです。インターネットへ直接公開しません。
+- TTS単体は端末へ内蔵していません。現在のTTS送信ツールはmacOS音声を使います。
 - 通知キューは再起動後には残りません。
 - R36MAX 2では480×272のUIを1024×768へアスペクト比維持で拡大し、上下を余白にしています。
 - R36MAX 2のUSB OTGデータ接続は未解決です。現在の配備とSSHはWi-Fiを使用します。

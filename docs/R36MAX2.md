@@ -77,6 +77,7 @@ path:   POST /webhook
 
 `webhook.json`はrootだけが読める0600で保存しています。
 トークンはリポジトリや公開文書へ記載しません。
+`audio_wav_base64`を添付すると、通知を表示しながらRK817スピーカーでWAVを再生します。
 
 ```sh
 curl --fail-with-body \
@@ -92,6 +93,19 @@ curl --fail-with-body \
 
 2026-10-20に日本語通知を実機へ送信し、`202 Accepted`を確認しました。
 サーバーは平文LAN HTTPなので、そのままインターネットへ公開しません。
+
+Macの`Kyoko`音声からTTS WAVを作って送る場合:
+
+```sh
+./scripts/send-notice-tts.sh \
+  --url http://R36_IP:8787/webhook \
+  --config /path/to/webhook.json \
+  --title "AIからのおしらせ" \
+  --body "少し休憩しませんか"
+```
+
+TTSは端末内ではなく、Mac側でWAVを生成します。
+端末は受け取ったWAVを`aplay`で再生します。
 
 ## 検証結果
 
