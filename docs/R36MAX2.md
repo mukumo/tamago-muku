@@ -67,6 +67,22 @@ SSH設定済みの端末へアプリだけを更新する場合:
 鍵やknown_hostsを変える場合は`R36_SSH_KEY`と`R36_KNOWN_HOSTS`を指定します。
 このスクリプトはWebhook設定とmukuの状態を上書きしません。
 
+起動時にmukuを自動で開く場合:
+
+```sh
+./scripts/set-r36max2-autostart.sh root@R36_IP
+```
+
+EmuELECの標準`global.bootgame.path`を使います。
+mukuのSTARTで終了すると通常のEmulationStationメニューが開きます。
+元に戻す場合:
+
+```sh
+./scripts/set-r36max2-autostart.sh root@R36_IP --disable
+```
+
+どちらも変更前の`emuelec.conf`を日時付きでバックアップします。
+
 ## Webhook
 
 ```text
