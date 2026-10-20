@@ -48,3 +48,27 @@ A/B/X/Yは本体を押したログで確認済みです。
 
 参考: [Linux input events](https://docs.kernel.org/input/event-codes.html)、
 [framebuffer API](https://docs.kernel.org/fb/api.html)。
+
+## XiFan R36MAX 2（Wi-Fiモデル）
+
+2026-10-20に接続した別個体。箱の表記はR36MAX 2、4.5インチ、Wi-Fi 2.4GHzです。
+
+| 項目 | 実機で確認した値 |
+|---|---|
+| SoC | Rockchip RK3326 / Cortex-A35 ×4 |
+| カーネル | Linux 5.10.160、aarch64 |
+| OS | EmuELEC 4.7-Nexus devel |
+| メモリー | 約976 MiB |
+| 画面 | DSI、1024×768 |
+| 描画 | `/dev/dri/card0`、DSI-1、DRM dumb buffer |
+| fb0の形式 | 32bpp、stride 4096、BGRX |
+| 入力 | `gamepad` event0、ほか6イベントデバイス |
+| Wi-Fi | AIC8800DC、2.4GHz、`TSUQREA-WiFi`へ接続 |
+| 音声 | RK817 |
+| 保存先 | eMMC `/storage` 2.0GB、ROM用SD 58.2GB |
+
+実測では1024×768で18秒・331フレーム（約18fps）を描画しました。
+A/B/Xは実入力ログで確認し、十字キーは`BTN_DPAD_*`にも対応しています。
+USB OTGのデータ接続は未解決のため、配備とSSHにはWi-Fiを使用しています。
+
+SSH、Ports、Webhookの詳細は[R36MAX2.md](R36MAX2.md)を参照してください。

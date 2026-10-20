@@ -1,0 +1,12 @@
+[Unit]
+Description=tamago-muku Dropbear SSH
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/storage/.config/muku-ssh/start.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

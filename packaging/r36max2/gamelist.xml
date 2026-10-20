@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<gameList>
+    <game>
+        <path>./Muku SSH Setup.sh</path>
+        <name>MUKU SSH SETUP</name>
+        <desc>Install and start the tamago-muku Dropbear SSH bridge.</desc>
+        <image>./images/muku.png</image>
+        <developer>tamago-muku</developer>
+        <publisher>tamago-muku</publisher>
+        <genre>Utility</genre>
+        <players>1</players>
+    </game>
+    <game>
+        <path>./Muku.sh</path>
+        <name>MUKU</name>
+        <desc>Spend a little time with muku and play two mini-games.</desc>
+        <image>./images/muku.png</image>
+        <developer>tamago-muku</developer>
+        <publisher>tamago-muku</publisher>
+        <genre>Virtual Pet</genre>
+        <players>1</players>
+    </game>
+</gameList>

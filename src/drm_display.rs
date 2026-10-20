@@ -1,4 +1,4 @@
-//! Software-rendered KMS output for the handheld's 480 × 272 panel.
+//! Software-rendered KMS output for the handheld's DRM panel.
 //!
 //! The launcher must stop the stock UI and its respawn loop before opening this
 //! device. Opening the card alone does not ensure that we own DRM master.
@@ -59,17 +59,28 @@ impl DrmDisplay {
         let panel = connectors
             .iter()
             .filter(|info| info.state() == connector::State::Connected)
-            .filter(|info| info.modes().iter().any(|mode| mode.size() == (480, 272)))
-            .min_by_key(|info| info.interface() != connector::Interface::DPI)
-            .ok_or_else(|| {
-                io::Error::new(io::ErrorKind::NotFound, "no connected 480x272 DRM panel")
-            })?;
+            .filter(|info| !info.modes().is_empty())
+            .min_by_key(|info| {
+                !matches!(
+                    info.interface(),
+                    connector::Interface::DPI | connector::Interface::DSI
+                )
+            })
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "no connected DRM panel"))?;
         let mode = panel
             .modes()
             .iter()
             .copied()
-            .find(|mode| mode.size() == (480, 272))
+            .max_by_key(|mode| u64::from(mode.size().0) * u64::from(mode.size().1))
             .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "panel mode disappeared"))?;
+        let (width, height) = mode.size();
+        let (width, height) = (u32::from(width), u32::from(height));
+        if width == 0 || height == 0 || width > 4096 || height > 4096 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "unsupported DRM panel dimensions",
+            ));
+        }
 
         // Prefer the panel's current encoder/CRTC. A fallback must respect the
         // encoder's possible_crtcs mask rather than selecting an arbitrary CRTC.
@@ -114,7 +125,7 @@ impl DrmDisplay {
             active: false,
         };
         display.buffer = Some(display.card.create_dumb_buffer(
-            (480, 272),
+            (width, height),
             DrmFourcc::Xrgb8888,
             32,
         )?);
@@ -142,15 +153,17 @@ impl DrmDisplay {
             .buffer
             .as_mut()
             .ok_or_else(|| io::Error::other("DRM display has no buffer"))?;
-        if image.width() != buffer.size().0 || image.height() != buffer.size().1 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "DRM image must match the 480x272 panel",
-            ));
-        }
         let pitch = buffer.pitch() as usize;
+        let (width, height) = buffer.size();
         let mut mapping = self.card.map_dumb_buffer(buffer)?;
-        copy_rgba_to_xrgb(image, mapping.as_mut(), pitch)
+        scale_rgba_to_xrgb(image, mapping.as_mut(), pitch, (width, height))
+    }
+
+    pub fn dimensions(&self) -> (u32, u32) {
+        self.buffer
+            .as_ref()
+            .map(Buffer::size)
+            .expect("DRM display always owns a buffer")
     }
 }
 
@@ -189,30 +202,62 @@ impl Drop for DrmDisplay {
     }
 }
 
-fn copy_rgba_to_xrgb(image: &tiny_skia::Pixmap, dest: &mut [u8], pitch: usize) -> io::Result<()> {
-    let row_bytes = image.width() as usize * 4;
-    let height = image.height() as usize;
+fn scale_rgba_to_xrgb(
+    image: &tiny_skia::Pixmap,
+    dest: &mut [u8],
+    pitch: usize,
+    target: (u32, u32),
+) -> io::Result<()> {
+    let (target_width, target_height) = target;
+    let target_row_bytes = target_width as usize * 4;
     let required = pitch
-        .checked_mul(height)
+        .checked_mul(target_height as usize)
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "DRM buffer size overflow"))?;
-    if pitch < row_bytes || dest.len() < required {
+    if image.width() == 0
+        || image.height() == 0
+        || target_width == 0
+        || target_height == 0
+        || pitch < target_row_bytes
+        || dest.len() < required
+    {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
             "DRM buffer is smaller than its image or pitch",
         ));
     }
+
+    // Fit without changing the 480x272 aspect ratio, then center the result.
+    // Use the UI paper color for the surrounding area on a 4:3 panel.
+    let scale = (f64::from(target_width) / f64::from(image.width()))
+        .min(f64::from(target_height) / f64::from(image.height()));
+    let scaled_width = ((f64::from(image.width()) * scale).round() as u32).clamp(1, target_width);
+    let scaled_height =
+        ((f64::from(image.height()) * scale).round() as u32).clamp(1, target_height);
+    let left = (target_width - scaled_width) / 2;
+    let top = (target_height - scaled_height) / 2;
+    let background = &image.data()[..4];
+
+    for y in 0..target_height as usize {
+        let row = &mut dest[y * pitch..y * pitch + target_row_bytes];
+        for pixel in row.chunks_exact_mut(4) {
+            pixel.copy_from_slice(&[background[2], background[1], background[0], 255]);
+        }
+    }
+
     // tiny-skia stores premultiplied RGBA. XRGB8888 is B,G,R,X in memory
-    // on this little-endian device. Transparent pixels composite onto black.
-    for (source, target) in image
-        .data()
-        .chunks_exact(row_bytes)
-        .zip(dest[..required].chunks_exact_mut(pitch))
-    {
-        for (rgba, bgrx) in source
-            .chunks_exact(4)
-            .zip(target[..row_bytes].chunks_exact_mut(4))
-        {
-            bgrx.copy_from_slice(&[rgba[2], rgba[1], rgba[0], 255]);
+    // on this little-endian device.
+    let source_stride = image.width() as usize * 4;
+    for y in 0..scaled_height {
+        let source_y =
+            ((u64::from(y) * u64::from(image.height())) / u64::from(scaled_height)) as usize;
+        for x in 0..scaled_width {
+            let source_x =
+                ((u64::from(x) * u64::from(image.width())) / u64::from(scaled_width)) as usize;
+            let source = &image.data()[source_y * source_stride + source_x * 4..][..4];
+            let target_offset =
+                (top as usize + y as usize) * pitch + (left as usize + x as usize) * 4;
+            dest[target_offset..target_offset + 4]
+                .copy_from_slice(&[source[2], source[1], source[0], 255]);
         }
     }
     Ok(())
@@ -220,27 +265,29 @@ fn copy_rgba_to_xrgb(image: &tiny_skia::Pixmap, dest: &mut [u8], pitch: usize) -
 
 #[cfg(test)]
 mod tests {
-    use super::copy_rgba_to_xrgb;
+    use super::scale_rgba_to_xrgb;
 
     #[test]
-    fn converts_channels_and_preserves_stride_padding() {
+    fn scales_channels_and_preserves_aspect_ratio() {
         let image = tiny_skia::Pixmap::from_vec(
             vec![10, 20, 30, 255, 40, 50, 60, 255],
             tiny_skia::IntSize::from_wh(1, 2).unwrap(),
         )
         .unwrap();
-        let mut dest = vec![0xa5; 16];
-        copy_rgba_to_xrgb(&image, &mut dest, 8).unwrap();
+        let mut dest = vec![0xa5; 32];
+        scale_rgba_to_xrgb(&image, &mut dest, 16, (4, 2)).unwrap();
         assert_eq!(&dest[..4], &[30, 20, 10, 255]);
-        assert_eq!(&dest[8..12], &[60, 50, 40, 255]);
-        assert_eq!(&dest[4..8], &[0xa5; 4]);
-        assert_eq!(&dest[12..], &[0xa5; 4]);
+        assert_eq!(&dest[4..8], &[30, 20, 10, 255]);
+        assert_eq!(&dest[8..12], &[30, 20, 10, 255]);
+        assert_eq!(&dest[12..16], &[30, 20, 10, 255]);
+        assert_eq!(&dest[16..20], &[60, 50, 40, 255]);
+        assert_eq!(&dest[28..32], &[60, 50, 40, 255]);
     }
 
     #[test]
     fn rejects_short_mapping_or_pitch() {
         let image = tiny_skia::Pixmap::new(2, 2).unwrap();
-        assert!(copy_rgba_to_xrgb(&image, &mut [0; 15], 8).is_err());
-        assert!(copy_rgba_to_xrgb(&image, &mut [0; 16], 4).is_err());
+        assert!(scale_rgba_to_xrgb(&image, &mut [0; 15], 8, (2, 2)).is_err());
+        assert!(scale_rgba_to_xrgb(&image, &mut [0; 16], 4, (2, 2)).is_err());
     }
 }

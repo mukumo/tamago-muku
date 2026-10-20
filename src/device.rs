@@ -126,10 +126,10 @@ fn inputs() -> io::Result<Vec<(String, File)>> {
 // Defaults cover this handheld's keyboard-style controls plus standard gamepads.
 fn key_button(code: u16) -> Option<Button> {
     match code {
-        103 => Some(Button::Up),
-        108 => Some(Button::Down),
-        105 => Some(Button::Left),
-        106 => Some(Button::Right),
+        103 | 544 => Some(Button::Up),
+        108 | 545 => Some(Button::Down),
+        105 | 546 => Some(Button::Left),
+        106 | 547 => Some(Button::Right),
         30 | 304 => Some(Button::A),
         48 | 305 => Some(Button::B),
         45 | 308 => Some(Button::X),
@@ -148,12 +148,13 @@ pub fn run(
 ) -> Result<(), Box<dyn Error>> {
     let mut fb = crate::drm_display::DrmDisplay::open()?;
     let mut inputs = inputs()?;
+    let (display_width, display_height) = fb.dimensions();
     unsafe {
         libc::signal(libc::SIGINT, stop as *const () as libc::sighandler_t);
         libc::signal(libc::SIGTERM, stop as *const () as libc::sighandler_t);
     }
     eprintln!(
-        "muku awake: 480x272, {} inputs, save={}, START exits",
+        "muku awake: {display_width}x{display_height}, {} inputs, save={}, START exits",
         inputs.len(),
         path.display()
     );
@@ -251,7 +252,9 @@ mod tests {
     #[test]
     fn controls_are_mapped() {
         assert_eq!(key_button(103), Some(Button::Up));
+        assert_eq!(key_button(544), Some(Button::Up));
         assert_eq!(key_button(105), Some(Button::Left));
+        assert_eq!(key_button(547), Some(Button::Right));
         assert_eq!(key_button(30), Some(Button::A));
         assert_eq!(key_button(48), Some(Button::B));
         assert_eq!(key_button(45), Some(Button::X));
