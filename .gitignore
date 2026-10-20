@@ -1,0 +1,8 @@
+/target/
+/work/
+/backups/
+__pycache__/
+.DS_Store
+*.img
+/state.json
+/install-manifest.json
