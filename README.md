@@ -1,73 +1,102 @@
-# tamago-muku — mukuのへや
+# tamago-muku
 
-RK3562の4.3インチゲーム機に、mukuが暮らす小さな部屋を置く実験。
-画面には「Built with Rust」を表示します。
-Rustの静的バイナリが480×272の画面を直接描き、インターネットなしで動きます。
+RK3562の4.3インチゲーム機で、mukuと暮らす小さなRustアプリです。
+480×272の画面へ直接描画し、オフラインでもペットの世話とミニゲームを遊べます。
+Wi-Fiモデルでは、任意でWebhook通知を受け取れます。
 
-![mukuのへや](docs/images/muku-room.png)
+![mukuの部屋](docs/images/muku-demo.gif)
 
-## あそび方
+## できること
 
-| ボタン | 動き |
+- 呼吸、まばたき、なでられたときの反応
+- ごはん、睡眠、遊びによる状態変化
+- 状態の自動保存
+- 2種類のミニゲームと0〜5個のリザルト評価
+- Wi-Fiモデル向けのトークン認証付きWebhook通知
+
+おなか・気分・元気は起動中の時間でゆっくり変化します。
+電源を切っていた時間は計算しないため、不在によるペナルティや死はありません。
+
+## 操作方法
+
+| 画面 | 操作 |
 |---|---|
-| A / 十字キー上 | なでる |
-| B / 十字キー右 | ごはん |
-| X / 十字キー下 | 遊ぶ |
-| Y / 十字キー左 | 寝る・起きる |
-| START | 保存して終了し、ゲームメニューへ戻る |
-
-呼吸・まばたき・跳ねる動きと、食事・睡眠・なでられたときの反応があります。
-おなか・気分・元気は起動中の時間でゆっくり変わります。
-電源を切っていた時間を計算しないので、不在によるペナルティや死はありません。
-画面のdayは、起きて一緒に過ごした時間を24時間ずつ数えたものです。
-会話AIの生成、成長段階、音、Webhook以外の同期はまだありません。
+| ホーム | A / 上: なでる、B / 右: ごはん、X / 下: ゲーム選択、Y / 左: 寝る・起きる |
+| ゲーム選択 | 左右: カーソル移動、A / X: 開始、B / Y: ホーム、START: ホーム |
+| STAR CATCH | 左右: mukuを移動、START: その時点でリザルト |
+| BEAT GARDEN | A / B / X / Y: 各レーンの音符をタップ、START: その時点でリザルト |
+| リザルト | A / X: もう一度、B / Y: ゲーム選択、START / 上下左右: ホーム |
+| ホームのSTART | 保存して元のゲーム機メニューへ戻る |
 
 ## ミニゲーム
 
-ホームでXを押すとゲームを選べます。左右で選び、Aで開始します。
+### STAR CATCH
 
-![ゲーム選択](docs/images/games-select.png)
+25秒間、mukuを左右に動かして落ちてくる星を拾います。
+金の星は3点です。6回取り逃すとラウンド終了です。
 
-- STAR CATCH: 25秒間、左右にmukuを動かして落ちてくる星を拾います。
-- BEAT GARDEN: 画面の4レーンへ落ちてくる音符に合わせ、A/B/X/Yを押します。
+### BEAT GARDEN
+
+4本のレーンへ落ちてくる音符に合わせ、A/B/X/Yを押します。
+音符が判定線へ近いほど高得点になり、コンボでスコアが伸びます。
 
 結果は0〜5個の星で表示され、遊んだ分はmukuの気分と元気へ反映されます。
-ゲーム中にSTARTを押すと、その時点で結果画面へ移ります。
 
 ## Wi-FiモデルのWebhook通知
 
-Wi-Fi内蔵モデルでは、トークン認証付きのLAN Webhookを受信できます。
-AIなどからJSONを送ると、mukuの部屋へ通知を表示します。
-設定、送信例、外部Webhookを公開する場合の注意は
-[docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md)にあります。
+Wi-Fiモデルでは、LAN内向けのHTTP Webhookを受け取れます。
+AIなどから次の形式で送ると、mukuの部屋へ日本語の通知を表示します。
 
-![日本語のWebhook通知](docs/images/japanese-notification.png)
-
-SDの`/muku/webhook.json`が見つかった場合だけ受信サーバーを起動します。
-このファイルがなければ、現在のオフライン動作は変わりません。
-
-## 実機で確認した範囲（2026-10-20）
-
-- USB adb接続先のRK3562で、480×272のDRM描画、3つのevdev入力を確認。
-- 8秒の試運転で160フレーム（約20fps）。終了後、純正メニューに復帰。
-- 状態・保存・Linux構造体・色順・strideの13件のテストが本体上で成功。
-- 実機での目視で本体の表示とA/B/X/Yの反応を確認。
-- macOSで9件の状態テスト、Linux向けClippy（警告をエラー扱い）が成功。
-- SDを本体へ戻して電源を入れるとmukuが起動することを、実機での目視で確認。
-
-## 開発
-
-```sh
-cd tamago-muku
-cargo test
-cargo run -- --preview /tmp/muku.png
-cargo run -- --preview /tmp/muku-sleep.png --action sleep
-rustup target add aarch64-unknown-linux-musl
-cargo build --release --target aarch64-unknown-linux-musl
+```json
+{
+  "title": "AIからのおしらせ",
+  "body": "少し休憩しませんか",
+  "source": "ai",
+  "kind": "notice"
+}
 ```
 
-`.cargo/config.toml`でRust付属のリンカーとCortex-A53向けのリンカー修正を指定しています。
+受信先は`POST /webhook`で、Bearerトークンが必須です。
+ゲーム中は割り込まず、ホームへ戻ったときに9秒間表示します。
+
+SDの`/muku/webhook.json`が見つかった場合だけ受信サーバーを開始します。
+ファイルがなければ、これまで通り完全オフラインで動作します。
+
+設定、送信例、外部Webhookを公開する場合の注意は
+[Webhook通知の設定](docs/NOTIFICATIONS.md)を参照してください。
+
+## 実機で確認済みの範囲
+
+2026-10-20に、USB接続したRK3562の4.3インチ機で次を確認しました。
+
+- 480×272のDRM描画と3つのevdev入力
+- 8秒で160フレーム（約20fps）の描画
+- A/B/X/Yによる操作
+- 終了後に純正メニューへ戻ること
+- SDカードからの自動起動
+- 本体上での状態・保存・Linux描画処理のテスト13件
+
+現在の版では、ミニゲームとWebhookをmacOS上でテストし、
+Linux向けClippyとaarch64静的ビルドを通しています。
+Wi-Fi内蔵モデルでのWebhook実受信は、まだ実機確認していません。
+
+## ビルド
+
+```sh
+rustup target add aarch64-unknown-linux-musl
+cargo test
+cargo build --locked --release --target aarch64-unknown-linux-musl
+```
+
+`.cargo/config.toml`でRust付属リンカーとCortex-A53向けのリンカー修正を指定しています。
 32bitのユーザーランドでも、実機の64bitカーネル上で動作します。
+
+画面だけを確認する場合:
+
+```sh
+cargo run -- --preview /tmp/muku.png
+cargo run -- --preview-game select /tmp/games.png
+```
 
 ## USBで一時起動
 
@@ -75,27 +104,24 @@ cargo build --release --target aarch64-unknown-linux-musl
 ./scripts/run-usb.sh YOUR_ADB_SERIAL
 ```
 
-`YOUR_ADB_SERIAL` は `adb devices -l` の対象機器のシリアルに置き換えます。
-このスクリプトは `/tmp/muku/` に転送して実行します。
-純正メニューの再起動ループを一時停止し、終了時に再開します。
-内蔵NANDや起動スクリプトへの書き込みはありません。
-一時起動の状態は `/tmp/muku/state.json` にあり、電源を切ると消えます。
-元のメニューはTERMを無視する場合があるため、メーカーと同じプロセス停止方法を使います。
-一時停止中の親プロセスが回収できない終了済みの子は、稼働中と数えません。
+`YOUR_ADB_SERIAL`は`adb devices -l`で確認した対象機器のシリアルへ置き換えます。
+この方法はアプリを`/tmp/muku/`へ転送し、終了時に純正メニューを再開します。
+内蔵NANDとSD上の起動スクリプトは変更しません。
+一時起動の保存データは`/tmp/muku/state.json`にあり、電源を切ると消えます。
 
 ## SDから起動
 
-SDカードの `/muku/muku-pet` がアプリ、`/muku/state.json` が保存データです。
-操作時・30秒ごと・正常終了時に保存し、書き込み途中のファイルで以前の保存を上書きしません。
-SDのexFAT自体は電源断への完全な耐性を保証しないため、保存してから通常の電源操作を行ってください。
+SDの`/muku/muku-pet`がアプリ、`/muku/state.json`が保存データです。
+純正の`/simulator/3562/em_ui.sh`を`em_ui.before-muku.sh`へ控え、
+SD上の入口からmukuを起動します。
+STARTまたはアプリの失敗時には元のゲーム機メニューへ戻ります。
 
-元の `/simulator/3562/em_ui.sh` を `em_ui.before-muku.sh` に控え、
-その入口からmukuを起動します。STARTまたはアプリの失敗時には元のメニューを実行します。
-カード内のゲームやROM、内蔵ファームウェアは書き換えません。
+カード内のゲームやROM、内蔵ファームウェアは変更しません。
+SDを取り外して起動した場合は、元の内蔵メニューが動きます。
 
-macOSで、書き込み可能にマウントした対象カードへインストールします。
-`YOUR_SD_VOLUME_UUID` は `diskutil info /Volumes/Untitled` の Volume UUID に置き換えます。
-インストーラーはUUID・exFAT・マウント先を照合し、ディスクのフォーマットや再マウントを行いません。
+macOSで、書き込み可能にマウントした対象カードへ配置します。
+`YOUR_SD_VOLUME_UUID`は`diskutil info /Volumes/Untitled`の
+Volume UUIDへ置き換えます。
 
 ```sh
 python3 scripts/install-sd.py \
@@ -105,8 +131,7 @@ python3 scripts/install-sd.py \
   --install
 ```
 
-同じカードをMacにつなぎ直し、`--restore`を指定すると元の起動スクリプトに戻せます。
-アプリと保存データは残します。変更後の起動スクリプトが別の内容なら、自動上書きを拒否します。
+元の起動スクリプトへ戻す場合:
 
 ```sh
 python3 scripts/install-sd.py \
@@ -115,39 +140,53 @@ python3 scripts/install-sd.py \
   --restore
 ```
 
-SDを取り外した状態で起動すると、元の内蔵メニューが動きます。
-本体へSDを戻す前にMacで安全に取り出してください。
+アプリとmukuの保存データは残ります。
+起動スクリプトがインストーラー以外で変更されていた場合、自動上書きは拒否します。
 
-## 出典と実装
+## SD上のアプリを更新
 
-mukuの形・色・目・呼吸と瞬きは、
-[mukumoのmobile版Muku.tsx](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
-と[ブランド仕様](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md)
-を確認して移植しました。標準のmukuに口・ほっぺ・手足・衣装は追加していません。
-キャラクター素材に公開ライセンスが確認できたという意味ではありません。
-
-通知の日本語表示には
-[M PLUS Rounded 1c Regular](assets/fonts/MPLUSRounded1c-Regular.ttf)を使っています。
-同梱の[SIL Open Font License](assets/fonts/OFL.txt)に従います。
-
-- `src/state.rs`: ローカル状態、時間の経過、検証と原子的な保存。
-- `src/render.rs`: tiny-skiaによる部屋とキャラクターの描画。
-- `src/device.rs`: ボタン入力、重複入力の抑制、20fpsのループ。
-- `src/drm_display.rs`: DRM/KMS画面所有、strideを考慮した色変換、後片付け。
-- `src/main.rs`: 実機起動、プレビュー、状態シミュレーション。
-
-[Linux framebuffer API](https://docs.kernel.org/fb/api.html)と
-[Linux input event仕様](https://docs.kernel.org/input/event-codes.html)も参照しています。
-機器の要点は `docs/HARDWARE.md` にあります。元の調査記録とバックアップは手元で別途保管しています。
-NAND先頭のローダーは未バックアップなので、ファームウェアを書き換える実験には進んでいません。
-
-## USBでSD上のアプリを更新
-
-SDカードを本体に入れ、USB接続した状態で使います。
-現在の配置とハッシュを確認し、旧バイナリとマニフェストを控えてから新しい版へ更新します。
-`--restart` はmukuを保存して終了させ、本体を再起動します。
+SDを本体へ入れてUSB接続した状態で使います。
+現在の配置とハッシュを確認し、旧バイナリを控えてから更新します。
 
 ```sh
 python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
   --binary target/aarch64-unknown-linux-musl/release/muku-pet --restart
 ```
+
+`--restart`を付けると、mukuの状態を保存して本体を再起動します。
+
+## 構成
+
+- `src/state.rs`: 状態、時間経過、検証、原子的な保存
+- `src/render.rs`: tiny-skiaによる画面と文字の描画
+- `src/app.rs`: 画面遷移と入力処理
+- `src/minigame.rs`: STAR CATCHとBEAT GARDEN
+- `src/device.rs`: evdev入力と約20fpsの実行ループ
+- `src/drm_display.rs`: DRM/KMS描画と後片付け
+- `src/notifications.rs`: トークン認証付きWebhook受信
+
+機器の確認結果は[ハードウェアメモ](docs/HARDWARE.md)にあります。
+
+## 制約
+
+- 会話AIの生成、成長段階、音、Webhook以外の同期はまだありません。
+- WebhookはLAN向けの平文HTTPです。インターネットへ直接公開しません。
+- 通知キューは再起動後には残りません。
+- Wi-Fi内蔵モデルの機種、OS、IP取得方法は未確認です。
+- NAND先頭のローダー領域は未取得です。ファームウェア書き換えには進んでいません。
+- SDのexFATは電源断への完全な耐性を保証しません。保存後に通常の電源操作を行います。
+
+## 出典とライセンス
+
+mukuの形、色、目、呼吸、瞬きは、
+[mukumoのmobile版Muku.tsx](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
+と[ブランド仕様](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md)
+を確認して移植しています。
+標準のmukuに口、ほっぺ、手足、衣装は追加していません。
+
+通知の日本語表示には
+[M PLUS Rounded 1c Regular](assets/fonts/MPLUSRounded1c-Regular.ttf)を使用しています。
+[SIL Open Font License](assets/fonts/OFL.txt)に従います。
+
+[Linux framebuffer API](https://docs.kernel.org/fb/api.html)と
+[Linux input event仕様](https://docs.kernel.org/input/event-codes.html)も参照しています。
