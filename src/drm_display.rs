@@ -4,7 +4,7 @@
 //! device. Opening the card alone does not ensure that we own DRM master.
 
 use drm::buffer::{Buffer, DrmFourcc};
-use drm::control::{connector, crtc, dumbbuffer, framebuffer, Device as ControlDevice};
+use drm::control::{connector, crtc, dumbbuffer, framebuffer, Device as ControlDevice, Mode};
 use drm::Device as _;
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -30,8 +30,12 @@ pub struct DrmDisplay {
     card: Card,
     old_crtc: crtc::Info,
     old_connectors: Vec<connector::Handle>,
-    buffer: Option<dumbbuffer::DumbBuffer>,
-    framebuffer: Option<framebuffer::Handle>,
+    crtc: crtc::Handle,
+    connector: connector::Handle,
+    mode: Mode,
+    buffers: Vec<dumbbuffer::DumbBuffer>,
+    framebuffers: Vec<framebuffer::Handle>,
+    front: usize,
     active: bool,
 }
 
@@ -115,31 +119,40 @@ impl DrmDisplay {
             }
         }
 
-        // Build the owner before allocating so later failures also clean up.
+        // Two buffers keep the panel from scanning pixels while the CPU writes
+        // the next frame. This removes tearing and visible flicker on the
+        // single-buffer legacy KMS path used by both supported handhelds.
         let mut display = Self {
             card,
             old_crtc,
             old_connectors,
-            buffer: None,
-            framebuffer: None,
+            crtc,
+            connector: panel.handle(),
+            mode,
+            buffers: Vec::with_capacity(2),
+            framebuffers: Vec::with_capacity(2),
+            front: 0,
             active: false,
         };
-        display.buffer = Some(display.card.create_dumb_buffer(
-            (width, height),
-            DrmFourcc::Xrgb8888,
-            32,
-        )?);
-        let buffer = display
-            .buffer
-            .as_mut()
-            .ok_or_else(|| io::Error::other("DRM buffer was not created"))?;
-        // Clear all bytes, including pitch padding, before scanout starts.
-        display.card.map_dumb_buffer(buffer)?.as_mut().fill(0);
-        let framebuffer = display.card.add_framebuffer(buffer, 24, 32)?;
-        display.framebuffer = Some(framebuffer);
+        for _ in 0..2 {
+            let mut buffer =
+                display
+                    .card
+                    .create_dumb_buffer((width, height), DrmFourcc::Xrgb8888, 32)?;
+            // Clear all bytes, including pitch padding, before scanout starts.
+            display.card.map_dumb_buffer(&mut buffer)?.as_mut().fill(0);
+            let framebuffer = display.card.add_framebuffer(&buffer, 24, 32)?;
+            display.buffers.push(buffer);
+            display.framebuffers.push(framebuffer);
+        }
+        let first_framebuffer = display
+            .framebuffers
+            .first()
+            .copied()
+            .ok_or_else(|| io::Error::other("DRM framebuffer was not created"))?;
         display.card.set_crtc(
             crtc,
-            Some(framebuffer),
+            Some(first_framebuffer),
             (0, 0),
             &[panel.handle()],
             Some(mode),
@@ -149,19 +162,35 @@ impl DrmDisplay {
     }
 
     pub fn present(&mut self, image: &tiny_skia::Pixmap) -> io::Result<()> {
+        let back = (self.front + 1) % self.buffers.len();
         let buffer = self
-            .buffer
-            .as_mut()
-            .ok_or_else(|| io::Error::other("DRM display has no buffer"))?;
+            .buffers
+            .get_mut(back)
+            .ok_or_else(|| io::Error::other("DRM display has no back buffer"))?;
         let pitch = buffer.pitch() as usize;
         let (width, height) = buffer.size();
         let mut mapping = self.card.map_dumb_buffer(buffer)?;
-        scale_rgba_to_xrgb(image, mapping.as_mut(), pitch, (width, height))
+        scale_rgba_to_xrgb(image, mapping.as_mut(), pitch, (width, height))?;
+        drop(mapping);
+        let framebuffer = self
+            .framebuffers
+            .get(back)
+            .copied()
+            .ok_or_else(|| io::Error::other("DRM display has no back framebuffer"))?;
+        self.card.set_crtc(
+            self.crtc,
+            Some(framebuffer),
+            (0, 0),
+            &[self.connector],
+            Some(self.mode),
+        )?;
+        self.front = back;
+        Ok(())
     }
 
     pub fn dimensions(&self) -> (u32, u32) {
-        self.buffer
-            .as_ref()
+        self.buffers
+            .first()
             .map(Buffer::size)
             .expect("DRM display always owns a buffer")
     }
@@ -192,10 +221,10 @@ impl Drop for DrmDisplay {
                     .set_crtc(self.old_crtc.handle(), None, (0, 0), &[], None);
             }
         }
-        if let Some(framebuffer) = self.framebuffer.take() {
+        for framebuffer in self.framebuffers.drain(..) {
             let _ = self.card.destroy_framebuffer(framebuffer);
         }
-        if let Some(buffer) = self.buffer.take() {
+        for buffer in self.buffers.drain(..) {
             let _ = self.card.destroy_dumb_buffer(buffer);
         }
         let _ = self.card.release_master_lock();

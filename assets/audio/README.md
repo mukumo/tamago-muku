@@ -4,6 +4,6 @@
 It plays when muku starts, when the Linux device resumes from suspend, and when
 muku wakes from its in-app sleep state.
 
-The source M4A supplied for this project was converted to 22.05kHz mono,
-16-bit PCM and normalized to -16 LUFS with a -1.5dB peak limit for the
-handheld speaker.
+The source M4A supplied for this project is converted to 48kHz mono, 16-bit
+PCM without time stretching or loudness normalization. The 48kHz rate matches
+the handhelds' audio output path, so speech keeps its original pitch and tempo.
