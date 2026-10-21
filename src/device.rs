@@ -14,6 +14,9 @@ use std::{
     time::{Duration, Instant},
 };
 
+const STARTUP_WAV: &[u8] = include_bytes!("../assets/audio/terasawa-mukumo-startup.wav");
+const RESUME_THRESHOLD: Duration = Duration::from_secs(3);
+
 // Linux framebuffer ABI. On this target c_ulong and userspace pointers are 64-bit.
 #[repr(C)]
 #[derive(Default, Clone, Copy, Debug)]
@@ -140,6 +143,22 @@ fn key_button(code: u16) -> Option<Button> {
     }
 }
 
+fn boottime() -> Option<Duration> {
+    let mut time = libc::timespec {
+        tv_sec: 0,
+        tv_nsec: 0,
+    };
+    let result = unsafe { libc::clock_gettime(libc::CLOCK_BOOTTIME, &mut time) };
+    if result != 0 || time.tv_sec < 0 || !(0..1_000_000_000).contains(&time.tv_nsec) {
+        return None;
+    }
+    Some(Duration::new(time.tv_sec as u64, time.tv_nsec as u32))
+}
+
+fn play_wake_sound(audio: &AudioPlayer) {
+    audio.play(STARTUP_WAV.to_vec());
+}
+
 pub fn run(
     app: &mut App,
     path: &Path,
@@ -151,6 +170,7 @@ pub fn run(
     let mut inputs = inputs()?;
     let (display_width, display_height) = fb.dimensions();
     let audio = AudioPlayer::new();
+    play_wake_sound(&audio);
     unsafe {
         libc::signal(libc::SIGINT, stop as *const () as libc::sighandler_t);
         libc::signal(libc::SIGTERM, stop as *const () as libc::sighandler_t);
@@ -161,6 +181,7 @@ pub fn run(
         path.display()
     );
     let start = Instant::now();
+    let mut previous_boottime = boottime();
     let mut previous = start;
     let mut last_save = start;
     let mut last_input: Option<(Button, Instant)> = None;
@@ -168,6 +189,18 @@ pub fn run(
     let mut snapshot_saved = false;
     while RUNNING.load(Ordering::Relaxed) {
         let now = Instant::now();
+        let current_boottime = boottime();
+        if let (Some(before), Some(current)) = (previous_boottime, current_boottime) {
+            let elapsed = current.saturating_sub(before);
+            if elapsed >= RESUME_THRESHOLD {
+                eprintln!(
+                    "resumed after {:.1}s; playing wake sound",
+                    elapsed.as_secs_f64()
+                );
+                play_wake_sound(&audio);
+            }
+        }
+        previous_boottime = current_boottime;
         if seconds.is_some_and(|limit| now.duration_since(start).as_secs_f64() >= limit) {
             break;
         }
@@ -205,6 +238,7 @@ pub fn run(
                             }) {
                                 continue;
                             }
+                            let was_asleep = app.pet.asleep;
                             match app.handle(button) {
                                 AppEvent::Exit => RUNNING.store(false, Ordering::Relaxed),
                                 AppEvent::Save => {
@@ -212,6 +246,10 @@ pub fn run(
                                     last_save = now;
                                 }
                                 AppEvent::None => {}
+                            }
+                            if was_asleep && !app.pet.asleep {
+                                eprintln!("muku woke; playing wake sound");
+                                play_wake_sound(&audio);
                             }
                             last_input = Some((button, now));
                             eprintln!("button {button:?}, interactions={}", app.pet.interactions);

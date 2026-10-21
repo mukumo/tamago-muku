@@ -62,6 +62,7 @@ muku には 3 つのゲージがあります。
 | 💤 元気 | `rest` | ぐっすり眠る |
 
 - 呼吸、まばたき、なでられたときの反応で、いつもそばにいてくれます
+- Mukuの起動時、本体のスリープ復帰時、Mukuが眠りから起きるときに起動音を再生します
 - ゲージは起動中の時間でゆっくり変化します
 - 状態は自動で保存されます
 - 電源を切っていた時間は計算しないので、**放っておいても弱ったり、いなくなったりしません** 🕊️
@@ -317,12 +318,13 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 - `src/device.rs`: evdev 入力と約 20fps の実行ループ
 - `src/drm_display.rs`: DRM/KMS 描画と後片付け
 - `src/notifications.rs`: トークン認証付き Webhook 受信
-- `src/audio.rs`: Webhook 添付 WAV の非同期再生
+- `src/audio.rs`: 起動・復帰音と Webhook 添付 WAV の非同期再生
+- `assets/audio/terasawa-mukumo-startup.wav`: バイナリへ埋め込む起動・復帰音
 - `scripts/xai_muku_bridge.py`: Grok 会話、Web 検索、xAI TTS、MUKU 転送
 
 ## ⚠️ いまできないこと
 
-- 端末上での会話 AI の生成、成長段階、効果音や BGM、Webhook 以外の同期はまだありません。
+- 端末上での会話 AI の生成、成長段階、起動音以外の効果音や BGM、Webhook 以外の同期はまだありません。
 - Webhook は LAN 向けの平文 HTTP です。インターネットへ直接公開しません。
 - TTS は端末へ内蔵していません。音声は Mac 側で、macOS 音声（`send-notice-tts.sh`）または xAI TTS（Grok ブリッジ）で生成します。
 - 通知キューは再起動後には残りません。

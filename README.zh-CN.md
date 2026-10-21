@@ -62,6 +62,7 @@ muku 有 3 个状态条。
 | 💤 精力 | `rest` | 好好睡一觉 |
 
 - 呼吸、眨眼、被摸摸时的反应，让 muku 一直陪在你身边
+- 启动 muku、设备从睡眠恢复以及 muku 从应用内睡眠中醒来时都会播放启动音
 - 状态条会在运行期间慢慢变化
 - 状态自动保存
 - 关机期间不计算时间，所以**就算放着不管，muku 也不会变虚弱或消失** 🕊️
@@ -321,12 +322,13 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 - `src/device.rs`：evdev 输入和约 20fps 的运行循环
 - `src/drm_display.rs`：DRM/KMS 绘制与清理
 - `src/notifications.rs`：带 Token 认证的 Webhook 接收
-- `src/audio.rs`：Webhook 附带 WAV 的异步播放
+- `src/audio.rs`：启动/唤醒音与 Webhook 附带 WAV 的异步播放
+- `assets/audio/terasawa-mukumo-startup.wav`：编译进二进制的启动/唤醒音
 - `scripts/xai_muku_bridge.py`：Grok 对话、网页搜索、xAI TTS、转发到 muku
 
 ## ⚠️ 目前还不支持
 
-- 机身上还没有 AI 对话生成、成长阶段、音效和背景音乐，以及 Webhook 以外的同步。
+- 机身上还没有 AI 对话生成、成长阶段、启动音以外的音效和背景音乐，以及 Webhook 以外的同步。
 - Webhook 是面向局域网的明文 HTTP，请勿直接暴露到互联网。
 - 机身不内置 TTS。语音在 Mac 上生成：使用 macOS 语音（`send-notice-tts.sh`）或 xAI TTS（Grok 桥接）。
 - 通知队列在重启后不会保留。

@@ -62,6 +62,7 @@ muku has three gauges.
 | 💤 Energy | `rest` | Let muku sleep |
 
 - Breathing, blinking, and reactions to petting keep muku feeling alive beside you
+- A startup and wake-up voice plays when muku starts or the handheld resumes
 - The gauges change slowly while the app is running
 - muku's state is saved automatically
 - Time while the power is off is not counted, so **muku never weakens or disappears while you are away** 🕊️
@@ -317,12 +318,13 @@ With `--restart`, muku's state is saved and the device reboots.
 - `src/device.rs`: evdev input and the ~20 fps run loop
 - `src/drm_display.rs`: DRM/KMS rendering and cleanup
 - `src/notifications.rs`: token-authenticated webhook receiver
-- `src/audio.rs`: asynchronous playback of WAVs attached to webhooks
+- `src/audio.rs`: startup/wake sound and asynchronous webhook WAV playback
+- `assets/audio/terasawa-mukumo-startup.wav`: embedded startup and wake sound
 - `scripts/xai_muku_bridge.py`: Grok chat, web search, xAI TTS, forwarding to muku
 
 ## ⚠️ Current limitations
 
-- No on-device conversation AI, growth stages, sound effects or music, or syncing other than webhooks yet.
+- No on-device conversation AI, growth stages, additional effects or music, or syncing other than webhooks yet.
 - The webhook is plain HTTP meant for the local network. Do not expose it directly to the internet.
 - TTS does not run on the device. Speech is generated on a Mac, with macOS voices (`send-notice-tts.sh`) or xAI TTS (the Grok bridge).
 - The notice queue does not survive a reboot.
