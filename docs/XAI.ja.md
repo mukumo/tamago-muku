@@ -29,7 +29,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 ```
 
 入力したキーはシェル履歴、plist、ブラウザ、リポジトリへ保存しません。
-別アカウント名を使う場合は`MUKU_XAI_KEYCHAIN_ACCOUNT`を変更します。
+`MUKU_XAI_KEYCHAIN_ACCOUNT`はインストールスクリプトの確認にだけ使われます。LaunchAgentはブリッジへ渡さないため、別アカウント名を使う場合は`packaging/xai/com.muku.xai-bridge.plist.template`にも`--keychain-account`を追加します。
 
 ## MUKUトークン
 
@@ -71,7 +71,7 @@ healthの`environment_isolated`が`true`なら、Token・Secret・API key系の
 - TTS voice: `eve`
 - 言語: `ja`
 - 音声形式: PCM 16bit / mono / 22050Hz
-- Web検索: 画面のチェックで会話ごとに指定
+- Web検索: 画面のチェックで送信ごとに指定
 - 履歴: 最新16メッセージをMacのメモリ内だけに保持
 - xAI Responses API: `store=false`
 
@@ -83,7 +83,7 @@ healthの`environment_isolated`が`true`なら、Token・Secret・API key系の
 - 現在の会話UIは文字入力です
 - R36MAX 2の内蔵マイクは確認できていません
 - 音声入力STTと端末単体の音声会話は次の段階です
-- MacがスリープするとブリッジとTunnelは停止します
+- Macがスリープすると、ブリッジとMac上で動かしているトンネル（Cloudflare Tunnelなど）は停止します
 
 ## 停止と再開
 

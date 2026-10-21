@@ -29,7 +29,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 ```
 
 输入的 Key 不会保存到 Shell 历史、plist、浏览器或仓库中。
-如需使用其他账户名，请修改 `MUKU_XAI_KEYCHAIN_ACCOUNT`。
+`MUKU_XAI_KEYCHAIN_ACCOUNT` 只影响安装脚本的检查。LaunchAgent 不会把它传给桥接服务，因此如需使用其他账户名，还需在 `packaging/xai/com.muku.xai-bridge.plist.template` 中添加 `--keychain-account`。
 
 ## MUKU Token
 
@@ -62,8 +62,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 health: http://127.0.0.1:8790/health
 ```
 
-如果 health 中的 `environment_isolated` 为 `true`，表示没有继承 Token、Secret、API key 类的
-环境变量。
+如果 health 中的 `environment_isolated` 为 `true`，表示没有继承 Token、Secret、API Key 类的环境变量。
 
 ## 对话设置
 
@@ -71,7 +70,7 @@ health: http://127.0.0.1:8790/health
 - TTS 语音：`eve`
 - 语言：`ja`
 - 音频格式：PCM 16bit / mono / 22050Hz
-- 网页搜索：通过页面上的复选框按对话指定
+- 网页搜索：通过页面上的复选框逐条消息指定
 - 历史记录：仅在 Mac 的内存中保留最新 16 条消息
 - xAI Responses API：`store=false`
 
@@ -83,7 +82,7 @@ health: http://127.0.0.1:8790/health
 - 当前的对话 UI 为文字输入
 - 尚未确认 R36MAX 2 的内置麦克风
 - 语音输入 STT 和设备单机语音对话是下一步工作
-- Mac 休眠时，桥接服务和 Tunnel 会停止
+- Mac 休眠时，桥接服务以及在 Mac 上运行的隧道（如 Cloudflare Tunnel）会停止
 
 ## 停止与重新启动
 
@@ -92,5 +91,4 @@ launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/com.muku.xai-bridge.p
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
-轮换 API Key 后，请先覆盖同一钥匙串项目，然后
-重启 LaunchAgent。
+轮换 API Key 后，请先覆盖同一钥匙串项目，然后重启 LaunchAgent。

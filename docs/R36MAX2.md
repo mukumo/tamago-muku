@@ -56,7 +56,7 @@ launcher: /storage/roms/ports_scripts/Muku.sh
 Launch `MUKU` from `PORTS` in EmulationStation.
 Press START to save and return to Ports.
 
-The 480×272 UI is scaled up 2× to 1024×768 with its aspect ratio kept, and centered.
+The 480×272 UI is scaled to fit the 1024×768 screen with its aspect ratio kept (about 2.13×, to 1024×580) and centered vertically.
 The older RK3562 unit stays at 1× as before.
 
 To update only the app on a device where SSH is already set up:

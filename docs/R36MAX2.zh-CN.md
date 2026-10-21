@@ -56,7 +56,7 @@ launcher: /storage/roms/ports_scripts/Muku.sh
 从 EmulationStation 的 `PORTS` 中启动 `MUKU`。
 按 START 保存并返回 Ports。
 
-480×272 的绘制界面保持宽高比放大 2 倍到 1024×768，并居中显示。
+480×272 的绘制界面保持宽高比缩放至适配 1024×768 屏幕（约 2.13 倍，即 1024×580），并垂直居中显示。
 旧的 RK3562 机器仍与之前一样为 1 倍。
 
 只向已配置好 SSH 的设备更新应用：

@@ -29,7 +29,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 ```
 
 The key you enter is never saved to shell history, plists, the browser, or the repository.
-To use a different account name, change `MUKU_XAI_KEYCHAIN_ACCOUNT`.
+`MUKU_XAI_KEYCHAIN_ACCOUNT` only changes the account the install script checks. The LaunchAgent does not pass it to the bridge, so to use a different account name also add `--keychain-account` to `packaging/xai/com.muku.xai-bridge.plist.template`.
 
 ## MUKU token
 
@@ -71,7 +71,7 @@ environment variables.
 - TTS voice: `eve`
 - Language: `ja`
 - Audio format: PCM 16bit / mono / 22050Hz
-- Web search: chosen per conversation with the checkbox on the page
+- Web search: toggled per message with the checkbox on the page
 - History: the latest 16 messages, kept only in memory on the Mac
 - xAI Responses API: `store=false`
 
@@ -83,7 +83,7 @@ The model and voice can be changed with the launch arguments of `xai_muku_bridge
 - The current chat UI takes text input
 - The R36MAX 2's built-in microphone has not been confirmed
 - Voice input (STT) and standalone voice chat on the device are the next step
-- The bridge and the Tunnel stop when the Mac sleeps
+- The bridge, and any tunnel running on the Mac (such as Cloudflare Tunnel), stop when the Mac sleeps
 
 ## Stopping and restarting
 

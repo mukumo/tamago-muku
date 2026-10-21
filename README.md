@@ -178,7 +178,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 Then open <http://127.0.0.1:8790> on your Mac.
 
 - The API key is read from the macOS Keychain and never passed to the browser or the R36
-- Turn web search on or off for each conversation
+- Turn web search on or off for each message
 - Grok's replies are converted to Japanese WAV with xAI TTS
 - Text and audio are sent to the R36 using muku's existing webhook token
 - The LaunchAgent starts with a minimal environment and does not inherit unneeded session secrets

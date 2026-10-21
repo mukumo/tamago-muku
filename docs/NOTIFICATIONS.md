@@ -28,9 +28,9 @@ Content-Type: application/json
 - `kind`: up to 24 characters. Defaults to `notice` when omitted.
 - The body text is limited to 180 characters and the HTTP body to 4MiB. Control characters are rejected.
 - `audio_wav_base64` is optional. A Base64-encoded PCM WAV of up to 2MiB is accepted.
-- The server does not start if the token is shorter than 16 characters.
+- The token must be 16–256 characters. Otherwise muku exits at startup with an error; it does not fall back to running without the server.
 - Success returns `202 Accepted`. Authentication failure returns `401`, and malformed input returns `422`.
-- A notice never interrupts a running game; it is shown for 9 seconds when you return to the room.
+- A notice does not pause a running game; its text is shown for 9 seconds when you return to the room.
 - Japanese, alphanumerics, and symbols are rendered with the bundled OFL font.
 - When audio is attached, it is handed to `aplay` asynchronously as soon as the notice is received. It does not wait for the text, so it also plays during a game.
 
@@ -85,7 +85,7 @@ A script builds a Japanese WAV with `say` and sends it to the webhook together w
 - Rate: 185 words/min
 - Audio format: PCM 16bit / mono / 22050Hz
 - Change these with `--voice`, `--rate`, and `--source`
-- `--dry-run` sends nothing and only shows the character counts of the generated JSON and the audio size
+- `--dry-run` sends nothing and prints the generated `title`, `body`, `source`, and `kind`, plus `audio_wav_bytes` (the length of the Base64 audio)
 - The token is read from the config file and never shown on the command line or standard output
 
 ### Text only
