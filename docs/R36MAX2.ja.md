@@ -99,7 +99,7 @@ path:   POST /webhook
 
 `webhook.json`はrootだけが読める0600で保存しています。
 トークンはリポジトリや公開文書へ記載しません。
-`audio_wav_base64`を添付すると、通知を表示しながらRK817スピーカーでWAVを再生します。
+`audio_wav_base64`を添付すると、受信した時点でRK817スピーカーからWAVを再生します。
 
 ```sh
 curl --fail-with-body \

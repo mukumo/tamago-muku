@@ -41,7 +41,7 @@ Wi-Fi 内蔵の R36MAX 2 なら、AI からのおしらせを muku が届けて�
   </tr>
 </table>
 
-<sub>RK3562 の 4.3 インチ機（480×272）で撮影。動画は音声なしでループ再生しています。</sub>
+<sub>RK3562 の 4.3 インチ機（480×272）で撮影。動画は音声なしでループ再生しています。<br>初期ビルドで撮影したため、画面下の X は「play」と表示されています（現在は「games」でミニゲームを選びます）。</sub>
 
 </div>
 
@@ -121,7 +121,7 @@ muku には 3 つのゲージがあります。
   </tr>
 </table>
 
-結果は 0〜5 個の星で表示され、遊んだ分は muku の気分と元気へ反映されます。
+結果は 1〜5 個の星で表示され、遊んだ分は muku の気分と元気へ反映されます。
 
 ## 💌 AI からのおしらせ（Wi-Fi モデル）
 
@@ -132,8 +132,8 @@ muku には 3 つのゲージがあります。
 R36MAX 2 では、LAN 内向けの HTTP Webhook を実機で確認済みです。
 AI などから送ると、muku の部屋へ日本語のおしらせを表示します。
 
-- ゲーム中は割り込まず、ホームへ戻ったときに 9 秒間表示
-- WAV を添付すると、本体のスピーカーで読み上げ 🔊
+- 文字はゲーム中に割り込まず、ホームへ戻ったときに 9 秒間表示
+- WAV を添付すると、受信した時点で本体のスピーカーから再生（ゲーム中でも再生されます）🔊
 - `/storage/muku/webhook.json` がなければ、これまで通り完全オフライン
 
 受信先は `POST /webhook` で、Bearer トークンが必須です。
@@ -171,6 +171,7 @@ Mac 上でローカル会話画面を動かし、Grok の返答を muku へ表�
 ```sh
 # 初回だけ
 security add-generic-password -U -a kan -s tamago-muku-xai -w
+# 端末と同じ bind/token を書いた webhook.json を .local/webhook.json に置く（0600、docs/XAI.ja.md 参照）
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
@@ -321,9 +322,9 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 
 ## ⚠️ いまできないこと
 
-- 会話 AI の生成、成長段階、音、Webhook 以外の同期はまだありません。
+- 端末上での会話 AI の生成、成長段階、効果音や BGM、Webhook 以外の同期はまだありません。
 - Webhook は LAN 向けの平文 HTTP です。インターネットへ直接公開しません。
-- TTS 単体は端末へ内蔵していません。現在の TTS 送信ツールは macOS 音声を使います。
+- TTS は端末へ内蔵していません。音声は Mac 側で、macOS 音声（`send-notice-tts.sh`）または xAI TTS（Grok ブリッジ）で生成します。
 - 通知キューは再起動後には残りません。
 - R36MAX 2 では 480×272 の UI を 1024×768 へアスペクト比維持で拡大し、上下を余白にしています。
 - R36MAX 2 の USB OTG データ接続は未解決です。現在の配備と SSH は Wi-Fi を使用します。
@@ -335,7 +336,7 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 muku の形、色、目、呼吸、瞬きは、
 [mukumoのmobile版Muku.tsx](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
 と[ブランド仕様](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md)
-を確認して移植しています。
+を確認して移植しています（いずれも非公開リポジトリ）。
 標準の muku に口、ほっぺ、手足、衣装は追加していません。
 
 通知の日本語表示には

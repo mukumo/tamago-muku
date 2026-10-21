@@ -32,7 +32,7 @@ Content-Type: application/json
 - Success returns `202 Accepted`. Authentication failure returns `401`, and malformed input returns `422`.
 - A notice never interrupts a running game; it is shown for 9 seconds when you return to the room.
 - Japanese, alphanumerics, and symbols are rendered with the bundled OFL font.
-- When audio is attached, it is handed to `aplay` asynchronously at the same moment the notice appears.
+- When audio is attached, it is handed to `aplay` asynchronously as soon as the notice is received. It does not wait for the text, so it also plays during a game.
 
 ## Configure on the SD card
 

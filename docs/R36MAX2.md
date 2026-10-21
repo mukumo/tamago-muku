@@ -99,7 +99,7 @@ path:   POST /webhook
 
 `webhook.json` is saved with mode 0600, readable only by root.
 Tokens are never written into the repository or public documents.
-Attach `audio_wav_base64` and the WAV plays through the RK817 speaker while the notice is shown.
+Attach `audio_wav_base64` and the WAV plays through the RK817 speaker as soon as the notice is received.
 
 ```sh
 curl --fail-with-body \

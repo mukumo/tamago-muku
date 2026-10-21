@@ -41,7 +41,7 @@ On the Wi-Fi equipped R36MAX 2, muku can also deliver notices from your AI (opti
   </tr>
 </table>
 
-<sub>Filmed on the RK3562 4.3-inch handheld (480×272). Clips are silent and loop.</sub>
+<sub>Filmed on the RK3562 4.3-inch handheld (480×272). Clips are silent and loop.<br>They were shot on an early build, so the X button reads “play” (it now reads “games” and opens the mini-games).</sub>
 
 </div>
 
@@ -74,7 +74,7 @@ muku has three gauges.
 
 ## 🎮 How to play
 
-On the home screen, four buttons are all you need.
+On the home screen, you care for muku with four buttons.
 
 | Button | What it does |
 |:---:|---|
@@ -121,7 +121,7 @@ On the home screen, four buttons are all you need.
   </tr>
 </table>
 
-Results are shown as 0–5 stars, and every round you play is reflected in muku's mood and energy.
+Results are shown as 1–5 stars, and every round you play is reflected in muku's mood and energy.
 
 ## 💌 Notices from your AI (Wi-Fi model)
 
@@ -130,10 +130,10 @@ Results are shown as 0–5 stars, and every round you play is reflected in muku'
 </div>
 
 On the R36MAX 2, an HTTP webhook for the local network has been tested on real hardware.
-Send a notice from your AI or any other tool, and muku shows it in Japanese inside its room.
+Send a notice from your AI or any other tool, and muku shows it inside its room. Japanese text is supported.
 
-- Never interrupts a game; the notice appears for 9 seconds when you return home
-- Attach a WAV and the console plays it through its speaker as the notice appears 🔊
+- The text never interrupts a game; it appears for 9 seconds when you return home
+- An attached WAV plays through the speaker as soon as it arrives, even mid-game 🔊
 - Without `/storage/muku/webhook.json`, the app stays fully offline as before
 
 The endpoint is `POST /webhook` and requires a Bearer token.
@@ -171,6 +171,7 @@ Run a local chat page on your Mac and have muku show and read Grok's replies alo
 ```sh
 # First time only
 security add-generic-password -U -a kan -s tamago-muku-xai -w
+# Put a webhook.json with the device's bind/token at .local/webhook.json (mode 0600, see docs/XAI.md)
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
@@ -261,7 +262,7 @@ The stock `/simulator/3562/em_ui.sh` is backed up as `em_ui.before-muku.sh`,
 and muku starts from the entry point on the SD card.
 Pressing START, or any app failure, returns you to the console's original menu.
 
-Games, ROMs, and the built-in firmware on the card are not modified.
+Games and ROMs on the card, and the console's built-in firmware, are not modified.
 If you boot without the SD card, the original built-in menu runs.
 
 On macOS, install to the target card mounted as writable.
@@ -321,9 +322,9 @@ With `--restart`, muku's state is saved and the device reboots.
 
 ## ⚠️ Current limitations
 
-- No AI-generated conversation, growth stages, sound, or syncing other than webhooks yet.
+- No on-device conversation AI, growth stages, sound effects or music, or syncing other than webhooks yet.
 - The webhook is plain HTTP meant for the local network. Do not expose it directly to the internet.
-- TTS is not built into the device. The current TTS sender uses macOS voices.
+- TTS does not run on the device. Speech is generated on a Mac, with macOS voices (`send-notice-tts.sh`) or xAI TTS (the Grok bridge).
 - The notice queue does not survive a reboot.
 - On the R36MAX 2, the 480×272 UI is scaled up to 1024×768 keeping its aspect ratio, with margins above and below.
 - USB OTG data connections on the R36MAX 2 are unresolved. Deployment and SSH currently use Wi-Fi.
@@ -335,6 +336,7 @@ With `--restart`, muku's state is saved and the device reboots.
 muku's shape, colors, eyes, breathing, and blinking were ported after reviewing
 [Muku.tsx from the mukumo mobile app](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
 and the [brand specification](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md).
+Both links point to a private repository.
 No mouth, cheeks, limbs, or outfits have been added to the standard muku.
 
 Japanese text in notices uses

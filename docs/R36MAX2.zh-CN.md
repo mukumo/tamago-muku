@@ -99,7 +99,7 @@ path:   POST /webhook
 
 `webhook.json` 以仅 root 可读的 0600 权限保存。
 Token 不会写入仓库或公开文档。
-附带 `audio_wav_base64` 时，会在显示通知的同时通过 RK817 扬声器播放 WAV。
+附带 `audio_wav_base64` 时，会在收到通知时立即通过 RK817 扬声器播放 WAV。
 
 ```sh
 curl --fail-with-body \

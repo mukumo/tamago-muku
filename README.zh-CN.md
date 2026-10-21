@@ -41,7 +41,7 @@ tamago-muku 是一款用 Rust 编写的电子宠物应用，让你在 RK3562 / R
   </tr>
 </table>
 
-<sub>拍摄于 RK3562 4.3 英寸掌机（480×272）。视频无声，循环播放。</sub>
+<sub>拍摄于 RK3562 4.3 英寸掌机（480×272）。视频无声，循环播放。<br>拍摄时为早期版本，因此画面下方 X 显示为 “play”（现为 “games”，用于选择小游戏）。</sub>
 
 </div>
 
@@ -121,7 +121,7 @@ muku 有 3 个状态条。
   </tr>
 </table>
 
-结算以 0～5 颗星显示，游玩会影响 muku 的心情和精力。
+结算以 1～5 颗星显示，游玩会影响 muku 的心情和精力。
 
 ## 💌 来自 AI 的通知（Wi-Fi 机型）
 
@@ -130,10 +130,10 @@ muku 有 3 个状态条。
 </div>
 
 已在 R36MAX 2 实机上验证面向局域网的 HTTP Webhook。
-从 AI 等工具发送通知后，muku 会在房间里用日文显示。
+从 AI 等工具发送通知后，muku 会在房间里显示（支持日文）。
 
-- 不会打断游戏，回到主界面时显示 9 秒
-- 附带 WAV 时，显示通知的同时用机身扬声器播放 🔊
+- 文字不会打断游戏，回到主界面时显示 9 秒
+- 附带的 WAV 会在收到时立即用机身扬声器播放（游戏中也会播放）🔊
 - 没有 `/storage/muku/webhook.json` 时，与之前一样完全离线运行
 
 接收地址为 `POST /webhook`，必须携带 Bearer Token。
@@ -149,7 +149,7 @@ muku 有 3 个状态条。
 
 > [!NOTE]
 > 通知文字使用日文字体 M PLUS Rounded 1c 显示。
-> 该字体缺少部分简体中文字形（如「们」「这」「说」），目前建议发送日文内容。
+> 该字体缺少部分简体中文字形（如“们”“这”“说”），目前建议发送日文内容。
 
 WAV 以 Base64 形式附带。
 用 macOS 的日语语音生成 WAV 并发送到 Webhook：
@@ -175,6 +175,7 @@ R36MAX 2 的 SSH 与部署请参阅 [R36MAX 2 实机笔记](docs/R36MAX2.zh-CN.m
 ```sh
 # 仅首次
 security add-generic-password -U -a kan -s tamago-muku-xai -w
+# 将包含设备 bind/token 的 webhook.json 放到 .local/webhook.json（权限 0600，参见 docs/XAI.zh-CN.md）
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
@@ -184,7 +185,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 - 每次对话都可以选择是否使用网页搜索
 - 用 xAI TTS 将 Grok 的回复转换为日语 WAV
 - 使用 muku 现有的 Webhook Token 将文字和语音发送到 R36
-- LaunchAgent 以最小环境启动，不继承无关的会话密钥
+- LaunchAgent 以最小环境启动，不继承登录会话中无关的 Token、API Key 等敏感环境变量
 
 📖 详情请参阅 [xAI 聊天桥接](docs/XAI.zh-CN.md)。
 
@@ -265,7 +266,7 @@ SD 卡上的 `/muku/muku-pet` 是应用，`/muku/state.json` 是存档。
 然后从 SD 卡上的入口启动 muku。
 按 START 或应用出错时，会返回掌机原有菜单。
 
-不会修改卡内的游戏、ROM 和内置固件。
+不会修改卡内的游戏和 ROM，也不会修改掌机的内置固件。
 拔出 SD 卡启动时，运行原有的内置菜单。
 
 在 macOS 上，安装到以可写方式挂载的目标卡。
@@ -325,9 +326,9 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 
 ## ⚠️ 目前还不支持
 
-- 还没有 AI 对话生成、成长阶段、音效，以及 Webhook 以外的同步。
+- 机身上还没有 AI 对话生成、成长阶段、音效和背景音乐，以及 Webhook 以外的同步。
 - Webhook 是面向局域网的明文 HTTP，请勿直接暴露到互联网。
-- 机身不内置 TTS。目前的 TTS 发送工具使用 macOS 语音。
+- 机身不内置 TTS。语音在 Mac 上生成：使用 macOS 语音（`send-notice-tts.sh`）或 xAI TTS（Grok 桥接）。
 - 通知队列在重启后不会保留。
 - 在 R36MAX 2 上，480×272 的界面按原比例放大到 1024×768，上下留白。
 - R36MAX 2 的 USB OTG 数据连接尚未解决，目前通过 Wi-Fi 部署和 SSH。
@@ -339,7 +340,7 @@ python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
 muku 的外形、颜色、眼睛、呼吸和眨眼，参照
 [mukumo 移动版 Muku.tsx](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
 和[品牌规范](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md)
-移植而来。
+移植而来（均位于非公开仓库）。
 标准的 muku 没有添加嘴巴、腮红、手脚或服装。
 
 通知的日文显示使用
