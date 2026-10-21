@@ -1,13 +1,15 @@
+**English** · [日本語](R36MAX2.ja.md) · [简体中文](R36MAX2.zh-CN.md)
+
 # XiFan R36MAX 2
 
-2026-10-20に確認したWi-Fi内蔵モデルです。
-箱表記と実機が異なる場合があるため、`/proc/device-tree/model`と画面モードを照合してください。
+The model with built-in Wi-Fi, checked on 2026-10-20.
+The box label may not match the actual hardware, so cross-check `/proc/device-tree/model` and the display mode.
 
-## 実機構成
+## Device configuration
 
 ```text
 SoC:       Rockchip RK3326 / Cortex-A35 x4
-RAM:       約976 MiB
+RAM:       about 976 MiB
 OS:        EmuELEC 4.7-Nexus devel
 Kernel:    Linux 5.10.160 aarch64
 Display:   DSI 1024x768, XRGB8888, stride 4096
@@ -17,12 +19,12 @@ eMMC:      /storage 2.0GB
 ROM SD:    /storage/roms 58.2GB
 ```
 
-このファームウェアにはOpenSSHの`sshd`もDropbearも含まれていません。
-そのためSDカードのPortsから、静的Dropbearと公開鍵を一度だけ配備しました。
+This firmware includes neither OpenSSH `sshd` nor Dropbear.
+So a static Dropbear binary and a public key were deployed once from Ports on the SD card.
 
 ## SSH
 
-rootパスワードは変更せず、公開鍵ログインだけを有効にしています。
+The root password is left unchanged; only public-key login is enabled.
 
 ```text
 dropbear:       /storage/.config/muku-ssh/dropbear
@@ -36,11 +38,11 @@ log:            /storage/.config/muku-ssh/dropbear.log
 ssh -i ~/.ssh/id_ed25519 root@R36_IP
 ```
 
-この例のIPはDHCPで変わる可能性があります。
-`muku-ssh.service`はEmulationStationから独立しており、UI再起動後も維持されます。
+The IP in this example may change via DHCP.
+`muku-ssh.service` is independent of EmulationStation and keeps running after the UI restarts.
 
-Dropbear v2025.89をAlpine 3.22/muslでaarch64静的ビルドしています。
-配布元とビルド条件は`packaging/r36max2/SSH-BOOTSTRAP.md`に記録しています。
+Dropbear v2025.89 is built statically for aarch64 on Alpine 3.22/musl.
+The download source and build conditions are recorded in `packaging/r36max2/SSH-BOOTSTRAP.md`.
 
 ## muku
 
@@ -51,41 +53,41 @@ log:      /storage/muku/muku.log
 launcher: /storage/roms/ports_scripts/Muku.sh
 ```
 
-EmulationStationの`PORTS`から`MUKU`を起動します。
-STARTで保存してPortsへ戻ります。
+Launch `MUKU` from `PORTS` in EmulationStation.
+Press START to save and return to Ports.
 
-480×272の描画UIを、1024×768へアスペクト比を保って2倍拡大し、中央配置しています。
-旧RK3562機では従来どおり1倍です。
+The 480×272 UI is scaled to fit the 1024×768 screen with its aspect ratio kept (about 2.13×, to 1024×580) and centered vertically.
+The older RK3562 unit stays at 1× as before.
 
-SSH設定済みの端末へアプリだけを更新する場合:
+To update only the app on a device where SSH is already set up:
 
 ```sh
 ./scripts/install-r36max2-ssh.sh root@R36_IP
 ```
 
-ホスト鍵は通常の`known_hosts`で検証します。
-鍵やknown_hostsを変える場合は`R36_SSH_KEY`と`R36_KNOWN_HOSTS`を指定します。
-このスクリプトはWebhook設定とmukuの状態を上書きしません。
+The host key is verified against your regular `known_hosts`.
+To use a different key or known_hosts file, set `R36_SSH_KEY` and `R36_KNOWN_HOSTS`.
+This script does not overwrite the webhook settings or muku's state.
 
-起動時にmukuを自動で開く場合:
+To open muku automatically at startup:
 
 ```sh
 ./scripts/set-r36max2-autostart.sh root@R36_IP
 ```
 
-EmulationStationの起動直前に、1回だけmukuを実行するsystemd設定を追加します。
-mukuのSTARTで終了すると、そのまま通常のEmulationStationメニューが開きます。
-mukuが起動できなかった場合もEmulationStationへ進み、再起動中の自動再試行では
-mukuを繰り返さないため、通常メニューから操作を続けられます。
-元に戻す場合:
+This adds a systemd setting that runs muku once, right before EmulationStation starts.
+When you exit muku with START, the regular EmulationStation menu opens.
+If muku fails to start, the device still goes on to EmulationStation, and automatic retries during a restart
+do not run muku again, so you can keep using the regular menu.
+To revert:
 
 ```sh
 ./scripts/set-r36max2-autostart.sh root@R36_IP --disable
 ```
 
-どちらも変更前の`emuelec.conf`と既存のsystemd設定を日時付きでバックアップします。
-実装は`packaging/r36max2/muku-autostart.sh`と
-`/storage/.config/system.d/emustation.service.d/muku-autostart.conf`です。
+Both commands back up the previous `emuelec.conf` and existing systemd settings with a timestamp.
+The implementation is in `packaging/r36max2/muku-autostart.sh` and
+`/storage/.config/system.d/emustation.service.d/muku-autostart.conf`.
 
 ## Webhook
 
@@ -95,9 +97,9 @@ listen: 0.0.0.0:8787
 path:   POST /webhook
 ```
 
-`webhook.json`はrootだけが読める0600で保存しています。
-トークンはリポジトリや公開文書へ記載しません。
-`audio_wav_base64`を添付すると、通知を表示しながらRK817スピーカーでWAVを再生します。
+`webhook.json` is saved with mode 0600, readable only by root.
+Tokens are never written into the repository or public documents.
+Attach `audio_wav_base64` and the WAV plays through the RK817 speaker as soon as the notice is received.
 
 ```sh
 curl --fail-with-body \
@@ -111,10 +113,10 @@ curl --fail-with-body \
   }'
 ```
 
-2026-10-20に日本語通知を実機へ送信し、`202 Accepted`を確認しました。
-サーバーは平文LAN HTTPなので、そのままインターネットへ公開しません。
+On 2026-10-20, a Japanese notice was sent to the device and `202 Accepted` was confirmed.
+The server speaks plain HTTP on the LAN, so do not expose it to the internet as-is.
 
-Macの`Kyoko`音声からTTS WAVを作って送る場合:
+To build a TTS WAV with the Mac's `Kyoko` voice and send it:
 
 ```sh
 ./scripts/send-notice-tts.sh \
@@ -124,31 +126,31 @@ Macの`Kyoko`音声からTTS WAVを作って送る場合:
   --body "少し休憩しませんか"
 ```
 
-TTSは端末内ではなく、Mac側でWAVを生成します。
-端末は受け取ったWAVを`aplay`で再生します。
+The WAV is generated on the Mac, not on the device.
+The device plays the WAV it receives with `aplay`.
 
-Grokとのテキスト会話、Web検索、xAI TTS、MUKU転送をまとめたローカル画面は
-[xAI会話ブリッジ](XAI.md)にあります。
+A local page that combines text chat with Grok, web search, xAI TTS, and forwarding to MUKU is described in
+[xAI chat bridge](XAI.md).
 
-## 検証結果
+## Verification results
 
-- 自動起動後のWi-Fi: `TSUQREA-WiFi`、2437MHz、channel 6
-- DHCP: LANアドレスを取得し、同一サブネットのMacから到達可能
-- 再起動後、EmulationStationを起動せずmukuが前面プロセスとして開始
-- muku: 1024×768、18秒で331フレーム
-- 入力: A=304、B=305、X=308を実入力で確認
+- Wi-Fi after autostart: `TSUQREA-WiFi`, 2437MHz, channel 6
+- DHCP: obtained a LAN address, reachable from a Mac on the same subnet
+- After a reboot, muku started as the foreground process without EmulationStation being launched
+- muku: 1024×768, 331 frames in 18 seconds
+- Input: A=304, B=305, X=308 confirmed with physical input
 - Webhook: `{"ok":true,"message":"accepted"}`
-- SSH: Dropbear 2025.89、Ed25519公開鍵認証
+- SSH: Dropbear 2025.89, Ed25519 public-key authentication
 
-## 復旧
+## Recovery
 
-元の`custom_start.sh`は`/storage/.config/`に日時付きでバックアップしています。
-初回確認時のバックアップ名は:
+The original `custom_start.sh` is backed up with a timestamp in `/storage/.config/`.
+The backup name from the first check is:
 
 ```text
 custom_start.sh.before-muku-20261020-225144
 ```
 
-SSHを止める場合は`muku-ssh.service`をdisable/stopします。
-Portsからmukuを外す場合は、SD上の`Muku.sh`とgamelistエントリを削除します。
-ファームウェアとブートローダーは変更していません。
+To stop SSH, disable/stop `muku-ssh.service`.
+To remove muku from Ports, delete `Muku.sh` and its gamelist entry from the SD card.
+The firmware and bootloader have not been modified.

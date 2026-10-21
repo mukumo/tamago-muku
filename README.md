@@ -1,51 +1,142 @@
+<div align="center">
+
+**English** · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
+
+<img src="docs/images/device-hello.jpg" alt="A handheld game console in a hand, with muku on screen saying “a good day to be muku.”" width="420">
+
 # tamago-muku
 
-RK3562/RK3326の小型ゲーム機で、mukuと暮らすRustアプリです。
-480×272と1024×768の画面へ直接描画し、オフラインでもペットの世話とミニゲームを遊べます。
-Wi-Fi内蔵のR36MAX 2では、任意でWebhook通知を受け取れます。
+**Live with fluffy muku inside a pocket-sized handheld ☁️**
 
-![mukuの部屋](docs/images/muku-demo.gif)
+[![Built with Rust](https://img.shields.io/badge/built%20with-Rust-00C4FF?logo=rust&logoColor=white)](#1-build)
+[![Works offline](https://img.shields.io/badge/works-offline-35C838)](#-life-with-muku)
+[![Handhelds](https://img.shields.io/badge/RK3562%20%C2%B7%20RK3326-handheld-F3A6FF)](#-supported-handhelds)
 
-## できること
+</div>
 
-- 呼吸、まばたき、なでられたときの反応
-- ごはん、睡眠、遊びによる状態変化
-- 状態の自動保存
-- 2種類のミニゲームと0〜5個のリザルト評価
-- Wi-Fiモデル向けのトークン認証付きWebhook通知と任意のTTS音声
+tamago-muku is a Rust app that lets you live with **muku** on small RK3562 / RK3326 handheld consoles.
+It draws straight to the screen, so you can care for muku and play mini-games with no network at all.
+On the Wi-Fi equipped R36MAX 2, muku can also deliver notices from your AI (optional).
 
-おなか・気分・元気は起動中の時間でゆっくり変化します。
-電源を切っていた時間は計算しないため、不在によるペナルティや死はありません。
+## 🎬 See it running
 
-## 操作方法
+<div align="center">
 
-| 画面 | 操作 |
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/images/device-idle.webp" alt="Video of muku breathing slowly on the handheld screen" width="240">
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/images/device-pet.webp" alt="Video of muku smiling with floating hearts after being petted with the A button" width="240">
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/images/device-care.webp" alt="Video of petting, feeding, and playing with muku in turn" width="240">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><b>🫧 Idle</b><br>Breathes slowly<br>and blinks now and then</td>
+    <td align="center"><b>💗 Pet</b><br>Press A to pet,<br>get a smile and hearts</td>
+    <td align="center"><b>🍙 Care</b><br>Pet → feed<br>→ play</td>
+  </tr>
+</table>
+
+<sub>Filmed on the RK3562 4.3-inch handheld (480×272). Clips are silent and loop.<br>They were shot on an early build, so the X button reads “play” (it now reads “games” and opens the mini-games).</sub>
+
+</div>
+
+<details>
+<summary>📺 Watch a screen capture</summary>
+<br>
+<img src="docs/images/muku-demo.gif" alt="Screen capture of muku's room" width="480">
+</details>
+
+## 🐣 Life with muku
+
+muku has three gauges.
+
+| Gauge | On screen | How to fill it |
+|---|---|---|
+| 🍙 Fullness | `food` | Feed muku |
+| 💗 Mood | `happy` | Pet muku or play together |
+| 💤 Energy | `rest` | Let muku sleep |
+
+- Breathing, blinking, and reactions to petting keep muku feeling alive beside you
+- The gauges change slowly while the app is running
+- muku's state is saved automatically
+- Time while the power is off is not counted, so **muku never weakens or disappears while you are away** 🕊️
+
+<div align="center">
+  <img src="docs/images/device-sleepy.jpg" alt="Photo of muku looking drowsy with the caption “getting sleepy.”" width="360">
+  <br>
+  <sub>When energy runs low, muku tells you it is “getting sleepy.” 💤</sub>
+</div>
+
+## 🎮 How to play
+
+On the home screen, you care for muku with four buttons.
+
+| Button | What it does |
+|:---:|---|
+| **A** / ↑ | 💗 Pet |
+| **B** / → | 🍙 Feed |
+| **X** / ↓ | 🎮 Pick a mini-game |
+| **Y** / ← | 💤 Sleep / wake up |
+| **START** | 💾 Save and return to the console's own menu |
+
+<details>
+<summary>Controls on other screens</summary>
+
+| Screen | Controls |
 |---|---|
-| ホーム | A / 上: なでる、B / 右: ごはん、X / 下: ゲーム選択、Y / 左: 寝る・起きる |
-| ゲーム選択 | 左右: カーソル移動、A / X: 開始、B / Y: ホーム、START: ホーム |
-| STAR CATCH | 左右: mukuを移動、START: その時点でリザルト |
-| BEAT GARDEN | A / B / X / Y: 各レーンの音符をタップ、START: その時点でリザルト |
-| リザルト | A / X: もう一度、B / Y: ゲーム選択、START / 上下左右: ホーム |
-| ホームのSTART | 保存して元のゲーム機メニューへ戻る |
+| Game select | Left/Right: move cursor, A / X: start, B / Y: home, START: home |
+| STAR CATCH | Left/Right: move muku, START: end the round and see results |
+| BEAT GARDEN | A / B / X / Y: tap the note in each lane, START: end the round and see results |
+| Results | A / X: play again, B / Y: game select, START / D-pad: home |
 
-## ミニゲーム
+</details>
 
-### STAR CATCH
+## 🌟 Mini-games
 
-25秒間、mukuを左右に動かして落ちてくる星を拾います。
-金の星は3点です。6回取り逃すとラウンド終了です。
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/images/star-catch.png" alt="STAR CATCH gameplay screen" width="360">
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/images/beat-garden.png" alt="BEAT GARDEN gameplay screen" width="360">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <b>⭐ STAR CATCH</b><br>
+      Move muku left and right for 25 seconds to catch falling stars.
+      Gold stars are worth 3 points. Miss 6 and the round ends.
+    </td>
+    <td>
+      <b>🎵 BEAT GARDEN</b><br>
+      Press A/B/X/Y in time with notes falling down 4 lanes.
+      Hits closer to the line score higher, and combos boost your score.
+    </td>
+  </tr>
+</table>
 
-### BEAT GARDEN
+Results are shown as 1–5 stars, and every round you play is reflected in muku's mood and energy.
 
-4本のレーンへ落ちてくる音符に合わせ、A/B/X/Yを押します。
-音符が判定線へ近いほど高得点になり、コンボでスコアが伸びます。
+## 💌 Notices from your AI (Wi-Fi model)
 
-結果は0〜5個の星で表示され、遊んだ分はmukuの気分と元気へ反映されます。
+<div align="center">
+  <img src="docs/images/japanese-notification.png" alt="muku's room showing a Japanese notice" width="480">
+</div>
 
-## Wi-FiモデルのWebhook通知
+On the R36MAX 2, an HTTP webhook for the local network has been tested on real hardware.
+Send a notice from your AI or any other tool, and muku shows it inside its room. Japanese text is supported.
 
-R36MAX 2では、LAN内向けのHTTP Webhookを実機で確認済みです。
-AIなどから次の形式で送ると、mukuの部屋へ日本語の通知を表示します。
+- The text never interrupts a game; it appears for 9 seconds when you return home
+- An attached WAV plays through the speaker as soon as it arrives, even mid-game 🔊
+- Without `/storage/muku/webhook.json`, the app stays fully offline as before
+
+The endpoint is `POST /webhook` and requires a Bearer token.
 
 ```json
 {
@@ -56,11 +147,8 @@ AIなどから次の形式で送ると、mukuの部屋へ日本語の通知を�
 }
 ```
 
-受信先は`POST /webhook`で、Bearerトークンが必須です。
-ゲーム中は割り込まず、ホームへ戻ったときに9秒間表示します。
-WAVをBase64で添付すると、通知表示と同時に本体のスピーカーで再生します。
-
-macOSの日本語音声からWAVを作り、Webhookへ送る場合:
+Attach the WAV as Base64.
+To build a WAV with a macOS Japanese voice and send it to the webhook:
 
 ```sh
 ./scripts/send-notice-tts.sh \
@@ -70,58 +158,72 @@ macOSの日本語音声からWAVを作り、Webhookへ送る場合:
   --body "少し休憩しませんか"
 ```
 
-音声はMacの`say`と`afconvert`で生成します。標準では`Kyoko`を使います。
+Audio is generated with the Mac's `say` and `afconvert`. The default voice is `Kyoko`.
 
-R36MAX 2の`/storage/muku/webhook.json`が見つかった場合だけ受信サーバーを開始します。
-ファイルがなければ、これまで通り完全オフラインで動作します。
+📖 Setup, sending examples, and cautions for exposing a webhook outside your network are in
+[Webhook notifications](docs/NOTIFICATIONS.md).
+SSH and deployment for the R36MAX 2 are in [R36MAX 2 hardware notes](docs/R36MAX2.md).
 
-設定、送信例、外部Webhookを公開する場合の注意は
-[Webhook通知の設定](docs/NOTIFICATIONS.md)を参照してください。
-R36MAX 2のSSHと配備は[R36MAX 2実機メモ](docs/R36MAX2.md)にまとめています。
+## 🗣️ Chat with Grok
 
-## Grokとの会話
-
-Mac上でローカル会話画面を動かし、Grokの返答をmukuへ表示・読み上げられます。
+Run a local chat page on your Mac and have muku show and read Grok's replies aloud.
 
 ```sh
-# 初回だけ
+# First time only
 security add-generic-password -U -a kan -s tamago-muku-xai -w
+# Put a webhook.json with the device's bind/token at .local/webhook.json (mode 0600, see docs/XAI.md)
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
-その後、Macで<http://127.0.0.1:8790>を開きます。
+Then open <http://127.0.0.1:8790> on your Mac.
 
-- APIキーはmacOS Keychainから読み、ブラウザやR36へ渡しません
-- Web検索の有無を会話ごとに選べます
-- Grokの返答をxAI TTSで日本語WAVへ変換します
-- MUKUの既存WebhookトークンでR36へ表示・音声を送ります
-- LaunchAgentは最小環境で起動し、不要なセッション秘密情報を継承しません
+- The API key is read from the macOS Keychain and never passed to the browser or the R36
+- Turn web search on or off for each message
+- Grok's replies are converted to Japanese WAV with xAI TTS
+- Text and audio are sent to the R36 using muku's existing webhook token
+- The LaunchAgent starts with a minimal environment and does not inherit unneeded session secrets
 
-詳細は[xAI会話ブリッジ](docs/XAI.md)にあります。
+📖 Details are in [xAI chat bridge](docs/XAI.md).
 
-## 実機で確認済みの範囲
+## 📟 Supported handhelds
 
-2026-10-20に、USB接続したRK3562の4.3インチ機で次を確認しました。
+|  | RK3562 4.3-inch handheld | XiFan R36MAX 2 |
+|---|---|---|
+| SoC | RK3562 (Cortex-A53) | RK3326 (Cortex-A35) |
+| Display | 480×272 | 1024×768 (480×272 UI scaled up) |
+| Connection | USB (adb) | Wi-Fi (SSH) |
+| Autostart | From the SD card | Shown before EmulationStation |
+| Notices & TTS | — | ✅ |
+| Hardware notes | [Hardware notes](docs/HARDWARE.md) | [R36MAX 2 notes](docs/R36MAX2.md) |
 
-- 480×272のDRM描画と3つのevdev入力
-- 8秒で160フレーム（約20fps）の描画
-- A/B/X/Yによる操作
-- 終了後に純正メニューへ戻ること
-- SDカードからの自動起動
-- 本体上での状態・保存・Linux描画処理のテスト13件
+<details>
+<summary>✅ What has been verified on real hardware</summary>
 
-2026-10-20にはR36MAX 2（RK3326、1024×768、EmuELEC 4.7）でも次を確認しました。
+On 2026-10-20, the following was confirmed on a USB-connected RK3562 4.3-inch handheld:
 
-- Ports起動用エントリの配置と、表示所有権を切り替えた実機起動・終了
-- A/B/X入力と、本体への状態保存
-- 1024×768で18秒・331フレーム（約18fps）の描画
-- 再起動時にEmulationStationより先へmukuを自動表示
-- Webhookの`202 Accepted`受信
-- 独立したDropbear SSHサービスの公開鍵認証
+- DRM rendering at 480×272 and three evdev input devices
+- Rendering 160 frames in 8 seconds (about 20 fps)
+- Controls with A/B/X/Y
+- Returning to the stock menu after exiting
+- Autostart from the SD card
+- 13 on-device tests covering state, saving, and Linux rendering
 
-Linux向けClippy、Rustテスト23件、aarch64静的ビルドも通しています。
+Also on 2026-10-20, the following was confirmed on the R36MAX 2 (RK3326, 1024×768, EmuELEC 4.7):
 
-## ビルド
+- Placing a Ports launcher entry, and launching and exiting on hardware while handing over display ownership
+- A/B/X input and saving state on the device
+- Rendering 331 frames in 18 seconds at 1024×768 (about 18 fps)
+- Showing muku automatically before EmulationStation on reboot
+- Receiving `202 Accepted` from the webhook
+- Public key authentication for a standalone Dropbear SSH service
+
+Clippy for Linux, 23 Rust tests, and a static aarch64 build all pass.
+
+</details>
+
+## 🛠️ Getting started (for developers)
+
+### 1. Build
 
 ```sh
 rustup target add aarch64-unknown-linux-musl
@@ -129,40 +231,43 @@ cargo test
 cargo build --locked --release --target aarch64-unknown-linux-musl
 ```
 
-`.cargo/config.toml`でRust付属リンカーとCortex-A53向けのリンカー修正を指定しています。
-32bitのユーザーランドでも、実機の64bitカーネル上で動作します。
+`.cargo/config.toml` selects Rust's bundled linker and a linker fix for Cortex-A53.
+The app runs on the device's 64-bit kernel even with a 32-bit userland.
 
-画面だけを確認する場合:
+### 2. Preview the screen only
 
 ```sh
 cargo run -- --preview /tmp/muku.png
 cargo run -- --preview-game select /tmp/games.png
 ```
 
-## USBで一時起動
+### 3. Run temporarily over USB
 
 ```sh
 ./scripts/run-usb.sh YOUR_ADB_SERIAL
 ```
 
-`YOUR_ADB_SERIAL`は`adb devices -l`で確認した対象機器のシリアルへ置き換えます。
-この方法はアプリを`/tmp/muku/`へ転送し、終了時に純正メニューを再開します。
-内蔵NANDとSD上の起動スクリプトは変更しません。
-一時起動の保存データは`/tmp/muku/state.json`にあり、電源を切ると消えます。
+Replace `YOUR_ADB_SERIAL` with the device serial shown by `adb devices -l`.
+The app is copied to `/tmp/muku/`, and the stock menu resumes when it exits.
+The internal NAND and the launch scripts on the SD card are left untouched.
+Save data for a temporary run lives in `/tmp/muku/state.json` and is lost on power off.
 
-## SDから起動
+### 4. Launch from the SD card
 
-SDの`/muku/muku-pet`がアプリ、`/muku/state.json`が保存データです。
-純正の`/simulator/3562/em_ui.sh`を`em_ui.before-muku.sh`へ控え、
-SD上の入口からmukuを起動します。
-STARTまたはアプリの失敗時には元のゲーム機メニューへ戻ります。
+<details>
+<summary>Installing to the SD card and restoring the original</summary>
 
-カード内のゲームやROM、内蔵ファームウェアは変更しません。
-SDを取り外して起動した場合は、元の内蔵メニューが動きます。
+On the SD card, `/muku/muku-pet` is the app and `/muku/state.json` is the save data.
+The stock `/simulator/3562/em_ui.sh` is backed up as `em_ui.before-muku.sh`,
+and muku starts from the entry point on the SD card.
+Pressing START, or any app failure, returns you to the console's original menu.
 
-macOSで、書き込み可能にマウントした対象カードへ配置します。
-`YOUR_SD_VOLUME_UUID`は`diskutil info /Volumes/Untitled`の
-Volume UUIDへ置き換えます。
+Games and ROMs on the card, and the console's built-in firmware, are not modified.
+If you boot without the SD card, the original built-in menu runs.
+
+On macOS, install to the target card mounted as writable.
+Replace `YOUR_SD_VOLUME_UUID` with the Volume UUID from
+`diskutil info /Volumes/Untitled`.
 
 ```sh
 python3 scripts/install-sd.py \
@@ -172,7 +277,7 @@ python3 scripts/install-sd.py \
   --install
 ```
 
-元の起動スクリプトへ戻す場合:
+To restore the original launch script:
 
 ```sh
 python3 scripts/install-sd.py \
@@ -181,57 +286,67 @@ python3 scripts/install-sd.py \
   --restore
 ```
 
-アプリとmukuの保存データは残ります。
-起動スクリプトがインストーラー以外で変更されていた場合、自動上書きは拒否します。
+The app and muku's save data are kept.
+If the launch script was changed by something other than the installer, automatic overwriting is refused.
 
-## SD上のアプリを更新
+</details>
 
-SDを本体へ入れてUSB接続した状態で使います。
-現在の配置とハッシュを確認し、旧バイナリを控えてから更新します。
+### 5. Update the app on the SD card
+
+<details>
+<summary>Updating over USB</summary>
+
+Use this with the SD card inserted in the device and connected over USB.
+It checks the current layout and hashes, and backs up the old binary before updating.
 
 ```sh
 python3 scripts/update-usb.py --serial YOUR_ADB_SERIAL \
   --binary target/aarch64-unknown-linux-musl/release/muku-pet --restart
 ```
 
-`--restart`を付けると、mukuの状態を保存して本体を再起動します。
+With `--restart`, muku's state is saved and the device reboots.
 
-## 構成
+</details>
 
-- `src/state.rs`: 状態、時間経過、検証、原子的な保存
-- `src/render.rs`: tiny-skiaによる画面と文字の描画
-- `src/app.rs`: 画面遷移と入力処理
-- `src/minigame.rs`: STAR CATCHとBEAT GARDEN
-- `src/device.rs`: evdev入力と約20fpsの実行ループ
-- `src/drm_display.rs`: DRM/KMS描画と後片付け
-- `src/notifications.rs`: トークン認証付きWebhook受信
-- `src/audio.rs`: Webhook添付WAVの非同期再生
-- `scripts/xai_muku_bridge.py`: Grok会話、Web検索、xAI TTS、MUKU転送
+### 🗂️ Layout
 
-機器の確認結果は[ハードウェアメモ](docs/HARDWARE.md)にあります。
+- `src/state.rs`: state, passage of time, validation, atomic saving
+- `src/render.rs`: drawing the screen and text with tiny-skia
+- `src/app.rs`: screen transitions and input handling
+- `src/minigame.rs`: STAR CATCH and BEAT GARDEN
+- `src/device.rs`: evdev input and the ~20 fps run loop
+- `src/drm_display.rs`: DRM/KMS rendering and cleanup
+- `src/notifications.rs`: token-authenticated webhook receiver
+- `src/audio.rs`: asynchronous playback of WAVs attached to webhooks
+- `scripts/xai_muku_bridge.py`: Grok chat, web search, xAI TTS, forwarding to muku
 
-## 制約
+## ⚠️ Current limitations
 
-- 会話AIの生成、成長段階、音、Webhook以外の同期はまだありません。
-- WebhookはLAN向けの平文HTTPです。インターネットへ直接公開しません。
-- TTS単体は端末へ内蔵していません。現在のTTS送信ツールはmacOS音声を使います。
-- 通知キューは再起動後には残りません。
-- R36MAX 2では480×272のUIを1024×768へアスペクト比維持で拡大し、上下を余白にしています。
-- R36MAX 2のUSB OTGデータ接続は未解決です。現在の配備とSSHはWi-Fiを使用します。
-- NAND先頭のローダー領域は未取得です。ファームウェア書き換えには進んでいません。
-- SDのexFATは電源断への完全な耐性を保証しません。保存後に通常の電源操作を行います。
+- No on-device conversation AI, growth stages, sound effects or music, or syncing other than webhooks yet.
+- The webhook is plain HTTP meant for the local network. Do not expose it directly to the internet.
+- TTS does not run on the device. Speech is generated on a Mac, with macOS voices (`send-notice-tts.sh`) or xAI TTS (the Grok bridge).
+- The notice queue does not survive a reboot.
+- On the R36MAX 2, the 480×272 UI is scaled up to 1024×768 keeping its aspect ratio, with margins above and below.
+- USB OTG data connections on the R36MAX 2 are unresolved. Deployment and SSH currently use Wi-Fi.
+- The loader area at the start of the NAND has not been dumped. Firmware rewriting has not been attempted.
+- exFAT on the SD card is not fully resilient to power loss. Power off normally after saving.
 
-## 出典とライセンス
+## 📜 Credits and license
 
-mukuの形、色、目、呼吸、瞬きは、
-[mukumoのmobile版Muku.tsx](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
-と[ブランド仕様](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md)
-を確認して移植しています。
-標準のmukuに口、ほっぺ、手足、衣装は追加していません。
+muku's shape, colors, eyes, breathing, and blinking were ported after reviewing
+[Muku.tsx from the mukumo mobile app](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/apps/mobile/src/components/Muku.tsx)
+and the [brand specification](https://github.com/TSUQREA/mukumo/blob/0d0b8d7e89069a99fef4f810d0c3688fd813f2cd/docs/design/brand.md).
+Both links point to a private repository.
+No mouth, cheeks, limbs, or outfits have been added to the standard muku.
 
-通知の日本語表示には
-[M PLUS Rounded 1c Regular](assets/fonts/MPLUSRounded1c-Regular.ttf)を使用しています。
-[SIL Open Font License](assets/fonts/OFL.txt)に従います。
+Japanese text in notices uses
+[M PLUS Rounded 1c Regular](assets/fonts/MPLUSRounded1c-Regular.ttf),
+under the [SIL Open Font License](assets/fonts/OFL.txt).
 
-[Linux framebuffer API](https://docs.kernel.org/fb/api.html)と
-[Linux input event仕様](https://docs.kernel.org/input/event-codes.html)も参照しています。
+The [Linux framebuffer API](https://docs.kernel.org/fb/api.html) and the
+[Linux input event codes](https://docs.kernel.org/input/event-codes.html) were also used as references.
+
+<div align="center">
+<br>
+<sub>☁️ Have a good day with muku.</sub>
+</div>

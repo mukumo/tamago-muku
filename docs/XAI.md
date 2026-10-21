@@ -1,37 +1,39 @@
-# xAI会話ブリッジ
+**English** · [日本語](XAI.ja.md) · [简体中文](XAI.zh-CN.md)
 
-Mac上のlocalhostで動く、muku向けのGrok会話画面です。
+# xAI chat bridge
+
+A Grok chat page for muku that runs on localhost on your Mac.
 
 ```text
-ブラウザ
+Browser
   → 127.0.0.1:8790
   → xAI Responses API
-  → xAI TTS（日本語WAV）
+  → xAI TTS (Japanese WAV)
   → MUKU Webhook
-  → R36MAX 2で表示・再生
+  → Shown and played on the R36MAX 2
 ```
 
-## 前提
+## Requirements
 
 - macOS
 - Python 3
-- bash、curl、jq、security、say、afconvert
-- R36MAX 2のWi-Fi接続とMUKU起動
+- bash, curl, jq, security, say, afconvert
+- R36MAX 2 connected to Wi-Fi with MUKU running
 
-## APIキーの保存
+## Storing the API key
 
-APIキーはmacOS Keychainへ保存します。
+Store the API key in the macOS Keychain.
 
 ```sh
 security add-generic-password -U -a kan -s tamago-muku-xai -w
 ```
 
-入力したキーはシェル履歴、plist、ブラウザ、リポジトリへ保存しません。
-別アカウント名を使う場合は`MUKU_XAI_KEYCHAIN_ACCOUNT`を変更します。
+The key you enter is never saved to shell history, plists, the browser, or the repository.
+`MUKU_XAI_KEYCHAIN_ACCOUNT` only changes the account the install script checks. The LaunchAgent does not pass it to the bridge, so to use a different account name also add `--keychain-account` to `packaging/xai/com.muku.xai-bridge.plist.template`.
 
-## MUKUトークン
+## MUKU token
 
-MUKU側のWebhook設定をGit管理外へ置きます。
+Keep MUKU's webhook settings outside Git.
 
 ```text
 .local/webhook.json
@@ -40,55 +42,55 @@ MUKU側のWebhook設定をGit管理外へ置きます。
 ```json
 {
   "bind": "0.0.0.0:8787",
-  "token": "48文字のランダムトークン"
+  "token": "48-character random token"
 }
 ```
 
-ディレクトリは0700、設定ファイルは0600にします。
+Set the directory to 0700 and the config file to 0600.
 
-## インストール
+## Installation
 
 ```sh
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
-`~/Library/LaunchAgents/com.muku.xai-bridge.plist`を作成し、起動します。
-ログイン時にも自動起動し、異常終了時は再起動します。
+This creates `~/Library/LaunchAgents/com.muku.xai-bridge.plist` and starts it.
+It also starts automatically at login and restarts if it exits abnormally.
 
 ```text
-画面:   http://127.0.0.1:8790
+Page:   http://127.0.0.1:8790
 health: http://127.0.0.1:8790/health
 ```
 
-healthの`environment_isolated`が`true`なら、Token・Secret・API key系の
-環境変数を継承していません。
+If `environment_isolated` in health is `true`, the bridge has not inherited any token, secret, or API key
+environment variables.
 
-## 会話設定
+## Chat settings
 
-- モデル: `grok-4.20-0309-non-reasoning`
+- Model: `grok-4.20-0309-non-reasoning`
 - TTS voice: `eve`
-- 言語: `ja`
-- 音声形式: PCM 16bit / mono / 22050Hz
-- Web検索: 画面のチェックで会話ごとに指定
-- 履歴: 最新16メッセージをMacのメモリ内だけに保持
+- Language: `ja`
+- Audio format: PCM 16bit / mono / 22050Hz
+- Web search: toggled per message with the checkbox on the page
+- History: the latest 16 messages, kept only in memory on the Mac
 - xAI Responses API: `store=false`
 
-モデルとvoiceは`xai_muku_bridge.py`の起動引数で変更できます。
+The model and voice can be changed with the launch arguments of `xai_muku_bridge.py`.
 
-## 制約
+## Limitations
 
-- MUKUを閉じていると返答の表示・再生はできません
-- 現在の会話UIは文字入力です
-- R36MAX 2の内蔵マイクは確認できていません
-- 音声入力STTと端末単体の音声会話は次の段階です
-- MacがスリープするとブリッジとTunnelは停止します
+- Replies cannot be shown or played while MUKU is closed
+- The current chat UI takes text input
+- The R36MAX 2's built-in microphone has not been confirmed
+- Voice input (STT) and standalone voice chat on the device are the next step
+- The bridge, and any tunnel running on the Mac (such as Cloudflare Tunnel), stop when the Mac sleeps
 
-## 停止と再開
+## Stopping and restarting
 
 ```sh
 launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/com.muku.xai-bridge.plist"
 ./scripts/install-xai-bridge.sh http://R36_IP:8787/webhook
 ```
 
-APIキーをローテーションした場合は、同じKeychain項目を上書きしてから
-LaunchAgentを再起動します。
+If you rotate the API key, overwrite the same Keychain item and then
+restart the LaunchAgent.

@@ -1,9 +1,11 @@
-# AI通知とWebhook
+**English** · [日本語](NOTIFICATIONS.ja.md) · [简体中文](NOTIFICATIONS.zh-CN.md)
 
-Wi-Fi内蔵モデル用の最初の受信経路です。
-端末自身がLAN内で待ち受け、認証済みのJSONを受け取るとmukuの部屋に通知を表示します。
+# AI notices and webhooks
 
-## 受信仕様
+The first receive path for the Wi-Fi model.
+The device itself listens on the LAN, and when it receives authenticated JSON, it shows a notice in muku's room.
+
+## Receive specification
 
 ```text
 POST /webhook HTTP/1.1
@@ -20,56 +22,56 @@ Content-Type: application/json
 }
 ```
 
-- `title`: 1〜64文字。必須。
-- `body`: 0〜180文字。
-- `source`: 最大32文字。省略時は`webhook`。
-- `kind`: 最大24文字。省略時は`notice`。
-- 本文は180文字、HTTP本文は4MiBまで。制御文字は拒否します。
-- `audio_wav_base64`は任意です。Base64で符号化したPCM WAVを最大2MiBまで受け付けます。
-- トークンが16文字未満ならサーバーを開始しません。
-- 成功時は`202 Accepted`。認証失敗は`401`、形式不正は`422`です。
-- 受信中のゲームを止めず、部屋に戻ったときに9秒間表示します。
-- 日本語、英数字、記号を同梱のOFLフォントで表示します。
-- 音声付きの場合、表示と同じタイミングで`aplay`へ非同期で渡します。
+- `title`: 1–64 characters. Required.
+- `body`: 0–180 characters.
+- `source`: up to 32 characters. Defaults to `webhook` when omitted.
+- `kind`: up to 24 characters. Defaults to `notice` when omitted.
+- The body text is limited to 180 characters and the HTTP body to 4MiB. Control characters are rejected.
+- `audio_wav_base64` is optional. A Base64-encoded PCM WAV of up to 2MiB is accepted.
+- The token must be 16–256 characters. Otherwise muku exits at startup with an error; it does not fall back to running without the server.
+- Success returns `202 Accepted`. Authentication failure returns `401`, and malformed input returns `422`.
+- A notice does not pause a running game; its text is shown for 9 seconds when you return to the room.
+- Japanese, alphanumerics, and symbols are rendered with the bundled OFL font.
+- When audio is attached, it is handed to `aplay` asynchronously as soon as the notice is received. It does not wait for the text, so it also plays during a game.
 
-## SDへ設定
+## Configure on the SD card
 
-まず推測されにくいトークンを作ります。
+First, generate a hard-to-guess token.
 
 ```sh
 openssl rand -hex 24
 ```
 
-`config/webhook.example.json`を元に`webhook.json`を作り、トークンを差し替えます。
-秘密のトークンをリポジトリへcommitしないでください。
+Create `webhook.json` from `config/webhook.example.json` and replace the token.
+Do not commit the secret token to the repository.
 
 ```json
 {
   "bind": "0.0.0.0:8787",
-  "token": "生成した48文字の乱数"
+  "token": "the 48-character random string you generated"
 }
 ```
 
-R36MAX 2では`/storage/muku/webhook.json`へ置きます。
-Portsの`MUKU`起動スクリプトは、このファイルがあれば自動で受信サーバーも開始します。
-ファイルがなければ、これまで通り完全オフラインで動きます。
+On the R36MAX 2, place it at `/storage/muku/webhook.json`.
+If this file exists, the `MUKU` launch script in Ports also starts the receive server automatically.
+Without the file, the app keeps running fully offline as before.
 
-## 送信テスト
+## Sending tests
 
-### xAIのTTS音声付き
+### With xAI TTS audio
 
-Grokの返答とxAI TTSをまとめてMUKUへ送るローカル画面があります。
+A local page sends Grok's replies and xAI TTS audio together to MUKU.
 
 ```text
 http://127.0.0.1:8790
 ```
 
-APIキーはKeychain、MUKUトークンはGit管理外の`.local/webhook.json`に保持します。
-設定と制約は[xAI会話ブリッジ](XAI.md)を参照してください。
+The API key is kept in the Keychain, and the MUKU token in `.local/webhook.json`, which is not tracked by Git.
+For setup and limitations, see [xAI chat bridge](XAI.md).
 
-### macOS標準音声付き
+### With the standard macOS voice
 
-`say`で日本語WAVを作り、本文と一緒にWebhookへ送るスクリプトがあります。
+A script builds a Japanese WAV with `say` and sends it to the webhook together with the text.
 
 ```sh
 ./scripts/send-notice-tts.sh \
@@ -79,16 +81,16 @@ APIキーはKeychain、MUKUトークンはGit管理外の`.local/webhook.json`�
   --body "少し休憩しませんか。温かいお茶をどうぞ。"
 ```
 
-- 標準音声: `Kyoko`
-- 速度: 185語/分
-- 音声形式: PCM 16bit / mono / 22050Hz
-- `--voice`、`--rate`、`--source`で変更できます
-- `--dry-run`は送信せず、生成JSONの文字数と音声サイズだけを表示します
-- トークンは設定ファイルから読み、コマンドラインや標準出力へ表示しません
+- Default voice: `Kyoko`
+- Rate: 185 words/min
+- Audio format: PCM 16bit / mono / 22050Hz
+- Change these with `--voice`, `--rate`, and `--source`
+- `--dry-run` sends nothing and prints the generated `title`, `body`, `source`, and `kind`, plus `audio_wav_bytes` (the length of the Base64 audio)
+- The token is read from the config file and never shown on the command line or standard output
 
-### テキストのみ
+### Text only
 
-端末のLANアドレスを`192.0.2.10`、トークンを環境変数`MUKU_WEBHOOK_TOKEN`に入れた例です。
+An example with the device's LAN address as `192.0.2.10` and the token in the environment variable `MUKU_WEBHOOK_TOKEN`.
 
 ```sh
 curl --fail-with-body \
@@ -102,15 +104,15 @@ curl --fail-with-body \
   }'
 ```
 
-AIサービスや外部Webhookは、端末のLANアドレスへ直接届かない場合があります。
-その場合はCloudflare Tunnelなどの認証付きトンネル、または署名検証を行う中継を前段に置きます。
-受信口を無認証のままインターネットへ公開しません。
+AI services and external webhooks may not be able to reach the device's LAN address directly.
+In that case, put an authenticated tunnel such as Cloudflare Tunnel, or a relay that verifies signatures, in front of it.
+Never expose the receive endpoint to the internet without authentication.
 
-## 現時点の制約
+## Current limitations
 
-- 平文HTTPです。同じLAN内、または信頼できるトンネルの終端からだけ使います。
-- 通知キューは実行中のプロセス内だけです。再起動後にも残す永続キューは次の段階です。
-- AI側の生成、要約、送信スケジュールはまだ接続していません。
+- It is plain HTTP. Use it only within the same LAN or from the end of a trusted tunnel.
+- The notice queue lives only inside the running process. A persistent queue that survives restarts is the next step.
+- AI-side generation, summarization, and send scheduling are not connected yet.
 
-2026-10-20にR36MAX 2（EmuELEC 4.7、AIC8800 Wi-Fi）への認証付きPOSTと
-`202 Accepted`応答を実機で確認しました。
+On 2026-10-20, an authenticated POST to the R36MAX 2 (EmuELEC 4.7, AIC8800 Wi-Fi) and
+the `202 Accepted` response were confirmed on real hardware.

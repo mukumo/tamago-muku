@@ -1,74 +1,76 @@
-# 確認したゲーム機
+**English** · [日本語](HARDWARE.ja.md) · [简体中文](HARDWARE.zh-CN.md)
 
-2026-10-20の実機確認。箱の型番表記と実際の中身が異なる機器です。
-ほかの同じ見た目のゲーム機にそのまま適用できるとは限りません。
+# Verified handhelds
 
-| 項目 | 実機で確認した値 |
+Checked on real hardware on 2026-10-20. On this unit, the model number printed on the box differs from what is actually inside.
+These findings may not apply as-is to other handhelds that look the same.
+
+| Item | Value confirmed on the device |
 |---|---|
 | SoC | Rockchip RK3562 / Cortex-A53 |
-| カーネル | Linux 5.10.209、aarch64 |
-| ユーザーランド | Buildroot由来、32bit armhf |
-| メモリー | 約756 MiB |
-| 画面 | DPI、480×272 |
-| 描画 | `/dev/dri/card0`、DPI-1、DRM dumb buffer |
-| fb0の形式 | 32bpp、stride 1920、R16/G8/B0、各8bit |
-| ボタン | `/dev/input/event0..2`、キーボード形式 |
-| 通信 | USB adb。現在のカーネルにTCP/IPなし |
-| 時計 | RTCなし |
-| 保存先 | SDのexFAT、`/sdcard`からアクセス可能 |
+| Kernel | Linux 5.10.209, aarch64 |
+| Userland | Buildroot-based, 32-bit armhf |
+| Memory | About 756 MiB |
+| Display | DPI, 480×272 |
+| Rendering | `/dev/dri/card0`, DPI-1, DRM dumb buffer |
+| fb0 format | 32bpp, stride 1920, R16/G8/B0, 8 bits each |
+| Buttons | `/dev/input/event0..2`, keyboard-style |
+| Connectivity | USB adb. No TCP/IP in the current kernel |
+| Clock | No RTC |
+| Storage | exFAT on the SD card, accessible at `/sdcard` |
 
-静的リンクした `aarch64-unknown-linux-musl` バイナリは実機で動作しました。
-DRM描画の前に、既存メニューが持っている画面の所有権を解放する必要があります。
-一時起動用スクリプトはメニューの再起動ループを止め、終了時に再開します。
+A statically linked `aarch64-unknown-linux-musl` binary ran on the device.
+Before DRM rendering, the existing menu has to release its ownership of the display.
+The temporary launch script stops the menu's restart loop and resumes it on exit.
 
-## 起動の仕組み
+## How startup works
 
-純正の `/etc/init.d/game_ui.sh` は、SDに
-`/sdcard/simulator/3562/em_ui.sh` があればそれを実行します。
-このSD上の入口からmukuを起動し、終了したら控えておいた元の入口へ戻ります。
-NAND、ブートローダー、カーネル、内蔵の起動スクリプトは書き換えません。
+The stock `/etc/init.d/game_ui.sh` runs
+`/sdcard/simulator/3562/em_ui.sh` if it exists on the SD card.
+muku starts from this entry point on the SD card, and on exit it hands back to the original entry point that was set aside.
+The NAND, bootloader, kernel, and built-in startup scripts are not modified.
 
-元のSDイメージと、OSから見えるNANDパーティションのバックアップは別途保管しています。
-NAND先頭のローダー領域は未取得なので、完全な復旧用バックアップではありません。
-このプロジェクトの動作にファームウェアの書き換えは必要ありません。
+The original SD image and a backup of the NAND partitions visible from the OS are stored separately.
+The loader area at the start of the NAND has not been dumped, so this is not a complete recovery backup.
+This project does not need any firmware rewriting to run.
 
-## 実入力の対応
+## Physical input mapping
 
-| 物理操作 | Linux key code |
+| Physical control | Linux key code |
 |---|---|
 | A | 30 |
 | B | 48 |
 | X | 45 |
 | Y | 21 |
 | START | 28 |
-| 上 / 右 / 下 / 左 | 103 / 106 / 108 / 105 |
+| Up / Right / Down / Left | 103 / 106 / 108 / 105 |
 
-A/B/X/Yは本体を押したログで確認済みです。
-一部の操作は複数デバイスから重複して届くため、同じアクションの160ms以内の重複を抑制します。
+A/B/X/Y were confirmed from logs of pressing the buttons on the device.
+Some controls arrive in duplicate from multiple devices, so repeats of the same action within 160ms are suppressed.
 
-参考: [Linux input events](https://docs.kernel.org/input/event-codes.html)、
-[framebuffer API](https://docs.kernel.org/fb/api.html)。
+References: [Linux input events](https://docs.kernel.org/input/event-codes.html),
+[framebuffer API](https://docs.kernel.org/fb/api.html).
 
-## XiFan R36MAX 2（Wi-Fiモデル）
+## XiFan R36MAX 2 (Wi-Fi model)
 
-2026-10-20に接続した別個体。箱の表記はR36MAX 2、4.5インチ、Wi-Fi 2.4GHzです。
+A separate unit connected on 2026-10-20. The box says R36MAX 2, 4.5-inch, Wi-Fi 2.4GHz.
 
-| 項目 | 実機で確認した値 |
+| Item | Value confirmed on the device |
 |---|---|
 | SoC | Rockchip RK3326 / Cortex-A35 ×4 |
-| カーネル | Linux 5.10.160、aarch64 |
+| Kernel | Linux 5.10.160, aarch64 |
 | OS | EmuELEC 4.7-Nexus devel |
-| メモリー | 約976 MiB |
-| 画面 | DSI、1024×768 |
-| 描画 | `/dev/dri/card0`、DSI-1、DRM dumb buffer |
-| fb0の形式 | 32bpp、stride 4096、BGRX |
-| 入力 | `gamepad` event0、ほか6イベントデバイス |
-| Wi-Fi | AIC8800DC、2.4GHz、`TSUQREA-WiFi`へ接続 |
-| 音声 | RK817 |
-| 保存先 | eMMC `/storage` 2.0GB、ROM用SD 58.2GB |
+| Memory | About 976 MiB |
+| Display | DSI, 1024×768 |
+| Rendering | `/dev/dri/card0`, DSI-1, DRM dumb buffer |
+| fb0 format | 32bpp, stride 4096, BGRX |
+| Input | `gamepad` event0, plus 6 other event devices |
+| Wi-Fi | AIC8800DC, 2.4GHz, connected to `TSUQREA-WiFi` |
+| Audio | RK817 |
+| Storage | eMMC `/storage` 2.0GB, ROM SD card 58.2GB |
 
-実測では1024×768で18秒・331フレーム（約18fps）を描画しました。
-A/B/Xは実入力ログで確認し、十字キーは`BTN_DPAD_*`にも対応しています。
-USB OTGのデータ接続は未解決のため、配備とSSHにはWi-Fiを使用しています。
+Measured: 331 frames rendered in 18 seconds at 1024×768 (about 18fps).
+A/B/X were confirmed from physical input logs, and the D-pad also supports `BTN_DPAD_*`.
+USB OTG data connections are still unresolved, so Wi-Fi is used for deployment and SSH.
 
-SSH、Ports、Webhookの詳細は[R36MAX2.md](R36MAX2.md)を参照してください。
+For SSH, Ports, and webhook details, see [R36MAX 2 notes](R36MAX2.md).
