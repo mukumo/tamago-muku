@@ -161,8 +161,8 @@ To build a WAV with a macOS Japanese voice and send it to the webhook:
 Audio is generated with the Mac's `say` and `afconvert`. The default voice is `Kyoko`.
 
 📖 Setup, sending examples, and cautions for exposing a webhook outside your network are in
-[Webhook notifications](docs/NOTIFICATIONS.md) (Japanese).
-SSH and deployment for the R36MAX 2 are in [R36MAX 2 hardware notes](docs/R36MAX2.md) (Japanese).
+[Webhook notifications](docs/NOTIFICATIONS.md).
+SSH and deployment for the R36MAX 2 are in [R36MAX 2 hardware notes](docs/R36MAX2.md).
 
 ## 🗣️ Chat with Grok
 
@@ -182,7 +182,7 @@ Then open <http://127.0.0.1:8790> on your Mac.
 - Text and audio are sent to the R36 using muku's existing webhook token
 - The LaunchAgent starts with a minimal environment and does not inherit unneeded session secrets
 
-📖 Details are in [xAI chat bridge](docs/XAI.md) (Japanese).
+📖 Details are in [xAI chat bridge](docs/XAI.md).
 
 ## 📟 Supported handhelds
 
@@ -193,7 +193,7 @@ Then open <http://127.0.0.1:8790> on your Mac.
 | Connection | USB (adb) | Wi-Fi (SSH) |
 | Autostart | From the SD card | Shown before EmulationStation |
 | Notices & TTS | — | ✅ |
-| Hardware notes | [Hardware notes](docs/HARDWARE.md) (Japanese) | [R36MAX 2 notes](docs/R36MAX2.md) (Japanese) |
+| Hardware notes | [Hardware notes](docs/HARDWARE.md) | [R36MAX 2 notes](docs/R36MAX2.md) |
 
 <details>
 <summary>✅ What has been verified on real hardware</summary>

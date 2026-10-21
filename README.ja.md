@@ -161,8 +161,8 @@ macOS の日本語音声から WAV を作り、Webhook へ送る場合:
 音声は Mac の `say` と `afconvert` で生成します。標準では `Kyoko` を使います。
 
 📖 設定、送信例、外部 Webhook を公開する場合の注意は
-[Webhook通知の設定](docs/NOTIFICATIONS.md)、
-R36MAX 2 の SSH と配備は [R36MAX 2実機メモ](docs/R36MAX2.md) にあります。
+[Webhook通知の設定](docs/NOTIFICATIONS.ja.md)、
+R36MAX 2 の SSH と配備は [R36MAX 2実機メモ](docs/R36MAX2.ja.md) にあります。
 
 ## 🗣️ Grok とおしゃべり
 
@@ -182,7 +182,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 - MUKU の既存 Webhook トークンで R36 へ表示・音声を送ります
 - LaunchAgent は最小環境で起動し、不要なセッション秘密情報を継承しません
 
-📖 詳細は [xAI会話ブリッジ](docs/XAI.md) にあります。
+📖 詳細は [xAI会話ブリッジ](docs/XAI.ja.md) にあります。
 
 ## 📟 対応しているゲーム機
 
@@ -193,7 +193,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 | つなぎかた | USB（adb） | Wi-Fi（SSH） |
 | 自動起動 | SD カードから | EmulationStation より先に表示 |
 | おしらせ・TTS | — | ✅ |
-| 実機メモ | [ハードウェアメモ](docs/HARDWARE.md) | [R36MAX 2実機メモ](docs/R36MAX2.md) |
+| 実機メモ | [ハードウェアメモ](docs/HARDWARE.ja.md) | [R36MAX 2実機メモ](docs/R36MAX2.ja.md) |
 
 <details>
 <summary>✅ 実機で確認済みの範囲</summary>

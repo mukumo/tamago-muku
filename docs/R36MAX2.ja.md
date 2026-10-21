@@ -1,3 +1,5 @@
+[English](R36MAX2.md) · **日本語** · [简体中文](R36MAX2.zh-CN.md)
+
 # XiFan R36MAX 2
 
 2026-10-20に確認したWi-Fi内蔵モデルです。
@@ -128,7 +130,7 @@ TTSは端末内ではなく、Mac側でWAVを生成します。
 端末は受け取ったWAVを`aplay`で再生します。
 
 Grokとのテキスト会話、Web検索、xAI TTS、MUKU転送をまとめたローカル画面は
-[xAI会話ブリッジ](XAI.md)にあります。
+[xAI会話ブリッジ](XAI.ja.md)にあります。
 
 ## 検証結果
 

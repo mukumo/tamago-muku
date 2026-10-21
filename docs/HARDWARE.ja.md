@@ -1,3 +1,5 @@
+[English](HARDWARE.md) · **日本語** · [简体中文](HARDWARE.zh-CN.md)
+
 # 確認したゲーム機
 
 2026-10-20の実機確認。箱の型番表記と実際の中身が異なる機器です。
@@ -71,4 +73,4 @@ A/B/X/Yは本体を押したログで確認済みです。
 A/B/Xは実入力ログで確認し、十字キーは`BTN_DPAD_*`にも対応しています。
 USB OTGのデータ接続は未解決のため、配備とSSHにはWi-Fiを使用しています。
 
-SSH、Ports、Webhookの詳細は[R36MAX2.md](R36MAX2.md)を参照してください。
+SSH、Ports、Webhookの詳細は[R36MAX 2実機メモ](R36MAX2.ja.md)を参照してください。

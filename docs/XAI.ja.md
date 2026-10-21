@@ -1,3 +1,5 @@
+[English](XAI.md) · **日本語** · [简体中文](XAI.zh-CN.md)
+
 # xAI会話ブリッジ
 
 Mac上のlocalhostで動く、muku向けのGrok会話画面です。

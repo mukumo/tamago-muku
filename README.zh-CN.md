@@ -165,8 +165,8 @@ WAV 以 Base64 形式附带。
 语音由 Mac 的 `say` 和 `afconvert` 生成，默认使用 `Kyoko`。
 
 📖 配置方法、发送示例以及对外公开 Webhook 时的注意事项，请参阅
-[Webhook 通知设置](docs/NOTIFICATIONS.md)（日文）。
-R36MAX 2 的 SSH 与部署请参阅 [R36MAX 2 实机笔记](docs/R36MAX2.md)（日文）。
+[Webhook 通知设置](docs/NOTIFICATIONS.zh-CN.md)。
+R36MAX 2 的 SSH 与部署请参阅 [R36MAX 2 实机笔记](docs/R36MAX2.zh-CN.md)。
 
 ## 🗣️ 和 Grok 聊天
 
@@ -186,7 +186,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 - 使用 muku 现有的 Webhook Token 将文字和语音发送到 R36
 - LaunchAgent 以最小环境启动，不继承无关的会话密钥
 
-📖 详情请参阅 [xAI 聊天桥接](docs/XAI.md)（日文）。
+📖 详情请参阅 [xAI 聊天桥接](docs/XAI.zh-CN.md)。
 
 ## 📟 支持的掌机
 
@@ -197,7 +197,7 @@ security add-generic-password -U -a kan -s tamago-muku-xai -w
 | 连接方式 | USB（adb） | Wi-Fi（SSH） |
 | 自启动 | 从 SD 卡启动 | 先于 EmulationStation 显示 |
 | 通知・TTS | — | ✅ |
-| 实机笔记 | [硬件笔记](docs/HARDWARE.md)（日文） | [R36MAX 2 实机笔记](docs/R36MAX2.md)（日文） |
+| 实机笔记 | [硬件笔记](docs/HARDWARE.zh-CN.md) | [R36MAX 2 实机笔记](docs/R36MAX2.zh-CN.md) |
 
 <details>
 <summary>✅ 已在实机上验证的内容</summary>

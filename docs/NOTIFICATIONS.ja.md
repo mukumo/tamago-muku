@@ -1,3 +1,5 @@
+[English](NOTIFICATIONS.md) · **日本語** · [简体中文](NOTIFICATIONS.zh-CN.md)
+
 # AI通知とWebhook
 
 Wi-Fi内蔵モデル用の最初の受信経路です。
@@ -65,7 +67,7 @@ http://127.0.0.1:8790
 ```
 
 APIキーはKeychain、MUKUトークンはGit管理外の`.local/webhook.json`に保持します。
-設定と制約は[xAI会話ブリッジ](XAI.md)を参照してください。
+設定と制約は[xAI会話ブリッジ](XAI.ja.md)を参照してください。
 
 ### macOS標準音声付き
 
